@@ -1,0 +1,60 @@
+/*
+ * duokit/duo.css — fold-aware layout without JavaScript.
+ *
+ * Uses the native media features and env() variables Safari 27.1 exposes for
+ * iPhone Duo (Device Posture + Viewport Segments). Pair with installDuoCSS()
+ * for the data-duo-* attributes on browsers/flags that lack them.
+ */
+
+:root {
+  /* Fold geometry; installDuoCSS() overwrites these from JS where needed. */
+  --duo-fold-x: 50vw;
+  --duo-fold-width: 0px;
+  --duo-fold-y: 50vh;
+  --duo-fold-height: 0px;
+}
+
+@media (horizontal-viewport-segments: 2) {
+  :root {
+    --duo-fold-x: env(viewport-segment-right 0 0);
+    --duo-fold-width: calc(env(viewport-segment-left 1 0) - env(viewport-segment-right 0 0));
+  }
+}
+
+@media (vertical-viewport-segments: 2) {
+  :root {
+    --duo-fold-y: env(viewport-segment-bottom 0 0);
+    --duo-fold-height: calc(env(viewport-segment-top 0 1) - env(viewport-segment-bottom 0 0));
+  }
+}
+
+/* .duo-split: two children, one on each side of the fold. */
+.duo-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.duo-split > :nth-child(2) { display: none; }
+
+[data-duo-display='inner'] .duo-split {
+  grid-template-columns: var(--duo-fold-x) var(--duo-fold-width) minmax(0, 1fr);
+}
+[data-duo-display='inner'] .duo-split > :nth-child(2) { display: block; grid-column: 3; }
+
+[data-duo-fold='horizontal'][data-duo-display='inner'] .duo-split {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: var(--duo-fold-y) var(--duo-fold-height) minmax(0, 1fr);
+}
+[data-duo-fold='horizontal'][data-duo-display='inner'] .duo-split > :nth-child(2) { grid-column: 1; grid-row: 3; }
+
+/* .duo-avoid-fold: keep a centred element (dialog, video controls) off a bent hinge. */
+[data-duo-occluding='true'][data-duo-fold='vertical'] .duo-avoid-fold {
+  margin-left: calc(var(--duo-fold-x) + var(--duo-fold-width));
+}
+[data-duo-occluding='true'][data-duo-fold='horizontal'] .duo-avoid-fold {
+  margin-top: calc(var(--duo-fold-y) + var(--duo-fold-height));
+}
+
+/* Visibility helpers. */
+.duo-cover-only, .duo-inner-only { display: none; }
+[data-duo-display='cover'] .duo-cover-only,
+[data-duo-display='inner'] .duo-inner-only { display: revert; }

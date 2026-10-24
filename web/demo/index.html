@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>DuoKit — fold-aware apps for iPhone Duo</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="top">
+      <span class="mark">DuoKit</span>
+      <nav><a href="#unfold">Unfold</a><a href="#layout">Layout</a><a href="https://github.com/arjunkshah12345-hash/duokit">GitHub</a></nav>
+    </header>
+
+    <main>
+      <section id="unfold" class="hero">
+        <div class="copy">
+          <h1>The unfold, as code.</h1>
+          <p>
+            An open reconstruction of the iPhone Duo hand-off. The cover screen blurs and stretches away from the
+            hinge while the inner screen resolves from the fold out. Each screen renders the result of a function of
+            the hinge angle.
+          </p>
+          <div class="controls">
+            <button id="play" class="primary">Play unfold</button>
+            <button id="playClose">Play fold</button>
+            <label class="file">Use your wallpaper<input id="file" type="file" accept="image/*" /></label>
+          </div>
+          <label class="slider">
+            <span>Hinge angle <output id="angleOut">0°</output></span>
+            <input id="angle" type="range" min="0" max="180" step="0.5" value="0" />
+          </label>
+          <label class="check"><input id="tilt" type="checkbox" /> Three-quarter view</label>
+        </div>
+
+        <div class="stage" id="stage">
+          <div class="phone" id="phone">
+            <div class="half fixed"><canvas id="innerRight"></canvas></div>
+            <div class="half moving" id="moving">
+              <div class="face front"><canvas id="innerLeft"></canvas></div>
+              <div class="face back"><canvas id="coverFace"></canvas></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="flat">
+        <h2>What each screen actually draws</h2>
+        <p>Run these two renderers on the two displays and feed them the same hinge angle.</p>
+        <div class="pair">
+          <figure><div class="screen cover"><canvas id="coverGL"></canvas></div><figcaption>Cover · role "cover"</figcaption></figure>
+          <figure><div class="screen inner"><canvas id="innerGL"></canvas></div><figcaption>Inner · role "inner"</figcaption></figure>
+        </div>
+      </section>
+
+      <section id="layout" class="layout">
+        <h2>One layout, every posture</h2>
+        <p>
+          <code>classify()</code> turns Viewport Segments, Device Posture, and screen shape into one state object.
+          <code>&lt;DuoSplit&gt;</code> and <code>duo.css</code> then put each pane on its own side of the fold.
+        </p>
+        <div class="devices" id="devices"></div>
+      </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
