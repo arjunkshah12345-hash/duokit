@@ -82,3 +82,21 @@ final class DuoStateTests: XCTestCase {
         XCTAssertEqual(s.foldAxis, .horizontal)
     }
 }
+
+#if canImport(Metal)
+import Metal
+
+final class ShaderBundleTests: XCTestCase {
+    func testMetalLibraryShipsTheUnfoldShader() throws {
+        let url = try XCTUnwrap(
+            Bundle.duoKitResources.url(forResource: "default", withExtension: "metallib"),
+            "Unfold.metal was not compiled into the package bundle"
+        )
+        guard let device = MTLCreateSystemDefaultDevice() else {
+            throw XCTSkip("No Metal device on this runner; metallib presence verified only")
+        }
+        let library = try device.makeLibrary(URL: url)
+        XCTAssertTrue(library.functionNames.contains("duoUnfold"))
+    }
+}
+#endif

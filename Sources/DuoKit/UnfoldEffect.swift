@@ -80,3 +80,8 @@ struct UnfoldTransitionModifier<Trigger: Equatable>: ViewModifier {
         }
     }
 }
+
+extension Bundle {
+    /// The package resource bundle holding the compiled `Unfold.metal`.
+    static var duoKitResources: Bundle { .module }
+}

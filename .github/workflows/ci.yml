@@ -30,4 +30,6 @@ jobs:
       - name: Build for iOS (compiles the Metal shader)
         run: xcodebuild build -scheme DuoKit -destination 'generic/platform=iOS Simulator' -quiet
       - name: Test on macOS
-        run: xcodebuild test -scheme DuoKit -destination 'platform=macOS' -quiet
+        run: |
+          set -o pipefail
+          xcodebuild test -scheme DuoKit -destination 'platform=macOS' 2>&1 | grep -E "Test Case|Executed|error:|TEST (SUCCEEDED|FAILED)"
