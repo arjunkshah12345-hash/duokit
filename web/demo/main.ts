@@ -46,6 +46,27 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.fill()
 }
 
+// Signal bars and battery, top right, sized like iOS's status bar.
+function paintStatus(ctx: CanvasRenderingContext2D, w: number, unit: number) {
+  const s = unit * 0.16
+  const y = unit * 0.42
+  let x = w - unit * 0.32 - s * 2.6
+  ctx.save()
+  ctx.fillStyle = 'rgba(255,255,255,0.95)'
+  ctx.strokeStyle = 'rgba(255,255,255,0.45)'
+  ctx.lineWidth = s * 0.12
+  ctx.beginPath()
+  ctx.roundRect(x, y - s * 0.6, s * 2.3, s * 1.2, s * 0.35)
+  ctx.stroke()
+  roundRect(ctx, x + s * 0.18, y - s * 0.42, s * 1.65, s * 0.84, s * 0.22)
+  ctx.fillStyle = 'rgba(255,255,255,0.45)'
+  roundRect(ctx, x + s * 2.4, y - s * 0.2, s * 0.14, s * 0.4, s * 0.07)
+  ctx.fillStyle = 'rgba(255,255,255,0.95)'
+  x -= s * 2.2
+  for (let i = 0; i < 4; i++) roundRect(ctx, x + i * s * 0.45, y + s * 0.55 - s * (0.4 + i * 0.27), s * 0.32, s * (0.4 + i * 0.27), s * 0.08)
+  ctx.restore()
+}
+
 function paintHome(spec: typeof COVER, img: HTMLImageElement | null): HTMLCanvasElement {
   const c = document.createElement('canvas')
   c.width = spec.w
@@ -57,13 +78,14 @@ function paintHome(spec: typeof COVER, img: HTMLImageElement | null): HTMLCanvas
   ctx.fillStyle = 'rgba(255,255,255,0.95)'
   ctx.textAlign = 'center'
   ctx.font = `600 ${unit * 0.95}px -apple-system, system-ui, sans-serif`
-  ctx.fillText('9:41', spec.w / 2, unit * 1.25)
+  ctx.fillText('9:41', spec.w / 2, unit * 1.5)
   ctx.font = `500 ${unit * 0.22}px -apple-system, system-ui, sans-serif`
-  ctx.fillText('Saturday, October 24', spec.w / 2, unit * 1.62)
+  ctx.fillText('Saturday, October 24', spec.w / 2, unit * 1.86)
+  paintStatus(ctx, spec.w, unit)
 
   const icon = unit * 0.62
   const gx = spec.w / spec.cols
-  const top = unit * 2.1
+  const top = unit * 2.25
   const gy = (spec.h - top - unit * 1.3) / spec.rows
   let k = 0
   for (let r = 0; r < spec.rows - 1; r++) {
@@ -96,8 +118,9 @@ const faces = {
   left: $<HTMLCanvasElement>('innerLeft'),
   right: $<HTMLCanvasElement>('innerRight'),
 }
+const phone = $<HTMLDivElement>('phone')
 const moving = $<HTMLDivElement>('moving')
-const fixed = document.querySelector<HTMLDivElement>('.half.fixed')!
+const fixed = $<HTMLDivElement>('fixed')
 let tilted = false
 const slider = $<HTMLInputElement>('angle')
 const out = $<HTMLOutputElement>('angleOut')
@@ -130,6 +153,13 @@ function draw(a: number) {
   const tilt = tilted ? 'rotateX(14deg) rotateY(-28deg) ' : ''
   fixed.style.transform = `${tilt}translateZ(-1px)`
   moving.style.transform = `${tilt}rotateY(${180 - a}deg)`
+  // Lighting: each face darkens as it turns away from the viewer, and the
+  // fixed half falls into the moving half's shadow near the hinge.
+  const rad = (d: number) => (d * Math.PI) / 180
+  phone.style.setProperty('--bend', String(1 - a / 180))
+  phone.style.setProperty('--lit-front', String(((1 - Math.cos(rad(180 - a))) / 2) * 0.55))
+  phone.style.setProperty('--lit-back', String(((1 - Math.cos(rad(a))) / 2) * 0.55))
+  phone.style.setProperty('--occlude', String(Math.max(0, 1 - a / 150) ** 2 * 0.6))
   blit(faces.cover, coverGL.canvas, 0, 1)
   blit(faces.left, innerGL.canvas, 0, 0.5)
   blit(faces.right, innerGL.canvas, 0.5, 0.5)
@@ -152,6 +182,12 @@ $<HTMLInputElement>('tilt').addEventListener('change', (e) => {
   tilted = (e.target as HTMLInputElement).checked
   draw(angle)
 })
+for (const radio of document.querySelectorAll<HTMLInputElement>('input[name=finish]')) {
+  radio.addEventListener('change', () => {
+    phone.dataset.finish = radio.value
+    $('finishName').textContent = radio.getAttribute('aria-label')
+  })
+}
 $<HTMLInputElement>('file').addEventListener('change', (e) => {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
@@ -172,9 +208,9 @@ setTimeout(() => play(false), 500)
 // Layout section: the same classify() + split logic as <DuoSplit>, on
 // simulated inputs for each posture.
 
-const SCENARIOS: { name: string; input: DuoInput; bend?: number }[] = [
-  { name: 'iPhone 17 Pro', input: { viewport: { width: 402, height: 874 }, screen: { width: 402, height: 874 } } },
-  { name: 'Duo · cover', input: { viewport: { width: 466, height: 678 }, screen: { width: 466, height: 678 } } },
+const SCENARIOS: { name: string; input: DuoInput; bend?: number; island?: boolean }[] = [
+  { name: 'iPhone 17 Pro', island: true, input: { viewport: { width: 402, height: 874 }, screen: { width: 402, height: 874 } } },
+  { name: 'Duo · cover', island: true, input: { viewport: { width: 466, height: 678 }, screen: { width: 466, height: 678 } } },
   {
     name: 'Duo · inner, flat',
     input: { viewport: { width: 890, height: 626 }, screen: { width: 890, height: 626 }, devicePosture: 'continuous' },
@@ -228,12 +264,12 @@ function renderApp(s: DuoState): string {
   return `<div class="app" style="${prop}:${track}">${listPane()}<div class="foldline" style="--dir:${vertical ? '0deg' : '90deg'}"></div>${detailPane()}</div>`
 }
 
-$('devices').innerHTML = SCENARIOS.map(({ name, input, bend }) => {
+$('devices').innerHTML = SCENARIOS.map(({ name, input, bend, island }) => {
   const s = classify(input)
   const { width, height } = input.viewport
   const summary = `display: ${s.display}\nposture: ${s.posture}\nfold:    ${s.fold ? `${s.foldAxis} @ ${s.foldAxis === 'vertical' ? s.fold.x : s.fold.y}px` : 'none'}`
   return `<figure class="device">
-    <div class="frame${bend ? ' bent' : ''}" style="width:${width * K}px;height:${height * K}px;${bend ? `--bend:${bend}deg` : ''}">${renderApp(s)}</div>
+    <div class="hw frame${bend ? ' bent' : ''}${island ? ' has-island' : ''}" style="width:${width * K}px;height:${height * K}px;${bend ? `--bend:${bend}deg` : ''}">${renderApp(s)}${island ? '<i class="island"></i>' : ''}</div>
     <figcaption><b>${name}</b><div class="state">${summary}</div></figcaption>
   </figure>`
 }).join('')

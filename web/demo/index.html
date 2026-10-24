@@ -30,15 +30,35 @@
             <span>Hinge angle <output id="angleOut">0°</output></span>
             <input id="angle" type="range" min="0" max="180" step="0.5" value="0" />
           </label>
-          <label class="check"><input id="tilt" type="checkbox" /> Three-quarter view</label>
+          <div class="options">
+            <label class="check"><input id="tilt" type="checkbox" /> Three-quarter view</label>
+            <div class="finish" role="radiogroup" aria-label="Finish">
+              <label title="Night Sky"><input type="radio" name="finish" value="sky" checked aria-label="Night Sky" /><i style="--sw: linear-gradient(135deg, #5b5e66, #26282c)"></i></label>
+              <label title="Star White"><input type="radio" name="finish" value="white" aria-label="Star White" /><i style="--sw: linear-gradient(135deg, #fbfaf7, #cbc8c0)"></i></label>
+              <span id="finishName">Night Sky</span>
+            </div>
+          </div>
         </div>
 
         <div class="stage" id="stage">
-          <div class="phone" id="phone">
-            <div class="half fixed"><canvas id="innerRight"></canvas></div>
+          <div class="phone" id="phone" data-finish="sky">
+            <div class="half fixed" id="fixed">
+              <i class="hinge"></i><i class="btn side"></i><i class="btn vol up"></i><i class="btn vol down"></i><i class="btn cam"></i>
+              <div class="body">
+                <div class="glass"><div class="screen"><canvas id="innerRight"></canvas></div></div>
+                <i class="shade"></i>
+              </div>
+            </div>
             <div class="half moving" id="moving">
-              <div class="face front"><canvas id="innerLeft"></canvas></div>
-              <div class="face back"><canvas id="coverFace"></canvas></div>
+              <div class="face body front">
+                <div class="glass"><div class="screen"><canvas id="innerLeft"></canvas></div></div>
+                <i class="shade"></i>
+              </div>
+              <div class="face body back">
+                <div class="glass"><div class="screen"><canvas id="coverFace"></canvas><i class="island"></i></div></div>
+                <i class="shade"></i>
+              </div>
+              <i class="edge"></i>
             </div>
           </div>
         </div>
@@ -48,8 +68,8 @@
         <h2>What each screen actually draws</h2>
         <p>Run these two renderers on the two displays and feed them the same hinge angle.</p>
         <div class="pair">
-          <figure><div class="screen cover"><canvas id="coverGL"></canvas></div><figcaption>Cover · role "cover"</figcaption></figure>
-          <figure><div class="screen inner"><canvas id="innerGL"></canvas></div><figcaption>Inner · role "inner"</figcaption></figure>
+          <figure><div class="hw cover-hw screen-flat cover"><canvas id="coverGL"></canvas><i class="island"></i></div><figcaption>Cover · role "cover"</figcaption></figure>
+          <figure><div class="hw screen-flat inner"><canvas id="innerGL"></canvas></div><figcaption>Inner · role "inner"</figcaption></figure>
         </div>
       </section>
 

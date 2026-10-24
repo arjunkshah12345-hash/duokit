@@ -1,10 +1,10 @@
 :root {
-  --bg: #0b0b0d;
-  --ink: #f2f1ee;
-  --mute: #8d8b86;
-  --line: #24242a;
-  --accent: #6aa8ff;
-  color-scheme: dark;
+  --bg: #fff;
+  --ink: #1d1d1f;
+  --mute: #6e6e73;
+  --line: #e8e8ed;
+  --soft: #f5f5f7;
+  color-scheme: light;
   font-family: ui-sans-serif, -apple-system, 'SF Pro Text', system-ui, sans-serif;
 }
 * { box-sizing: border-box; }
@@ -24,53 +24,162 @@ code { font-family: ui-monospace, 'SF Mono', monospace; font-size: 0.9em; color:
 .hero { display: grid; grid-template-columns: minmax(300px, 420px) 1fr; gap: 48px; align-items: center; padding: 72px 0 56px; }
 .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
 button, .file {
-  font: inherit; font-size: 14px; color: var(--ink); background: #18181c; border: 1px solid var(--line);
+  font: inherit; font-size: 14px; color: var(--ink); background: var(--soft); border: 1px solid var(--line);
   border-radius: 999px; padding: 10px 18px; cursor: pointer; transition: background 0.15s, border-color 0.15s;
 }
-button:hover, .file:hover { border-color: #3a3a42; background: #1f1f24; }
-button.primary { background: var(--ink); color: #0b0b0d; border-color: var(--ink); }
-button.primary:hover { background: #fff; }
+button:hover, .file:hover { border-color: #d2d2d7; background: #ededf0; }
+button.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+button.primary:hover { background: #000; }
 .file input { display: none; }
 .slider { display: grid; gap: 10px; font-size: 14px; color: var(--mute); margin-bottom: 16px; }
 .slider span { display: flex; justify-content: space-between; }
 .slider output { color: var(--ink); font-variant-numeric: tabular-nums; }
 input[type='range'] { width: 100%; accent-color: var(--ink); }
+.options { display: flex; flex-wrap: wrap; gap: 20px 28px; align-items: center; }
 .check { font-size: 14px; color: var(--mute); display: flex; gap: 8px; align-items: center; }
+.finish { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--mute); }
+.finish label { display: flex; cursor: pointer; }
+.finish input { position: absolute; opacity: 0; pointer-events: none; }
+.finish i {
+  width: 20px; height: 20px; border-radius: 50%; background: var(--sw);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18), 0 0 0 2px #fff, 0 0 0 3px transparent;
+}
+.finish input:checked + i { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18), 0 0 0 2px #fff, 0 0 0 3.5px var(--ink); }
+.finish input:focus-visible + i { outline: 2px solid #0071e3; outline-offset: 4px; }
 
-.stage { height: 560px; display: grid; place-items: center; }
-/* No preserve-3d on .phone: the moving half is always on the viewer's side of
-   the fixed half, so plain DOM paint order is correct and avoids 3D sorting bugs. */
+/* ---------------------------------------------------------------------------
+   The device. Proportions follow Apple's spec sheet: 164.6 × 117.8 mm open,
+   5.2 mm thick per half, so --w : --h = 82.3 : 117.8. Each half is a titanium
+   rim around black cover glass around the display. */
+
+.stage {
+  height: 560px; display: grid; place-items: center;
+  /* Studio shadow that follows the silhouette as it folds. */
+  filter: drop-shadow(0 30px 28px rgba(0, 0, 0, 0.16)) drop-shadow(0 6px 8px rgba(0, 0, 0, 0.1));
+}
 .phone {
-  --w: 230px; --h: 330px;
+  --w: 240px; --h: 344px; --t: 15px;
+  --rim: 3px; --bez: 7px; --r: 30px; --rh: 9px;
+  --sr: calc(var(--r) - var(--rim) - var(--bez));
+  /* Night Sky */
+  --ti: linear-gradient(160deg, #5b5e66 0%, #2c2e33 22%, #44474e 50%, #26282c 78%, #50535a 100%);
+  --ti-edge: linear-gradient(90deg, #1d1e22, #5d6068 45%, #3a3c42 55%, #18191c);
+  --ti-btn: linear-gradient(180deg, #62656d, #2a2c31);
+  --ti-hinge: linear-gradient(90deg, #17181b, #4b4e55 50%, #17181b);
+  --glass: #030304;
   position: relative; width: calc(var(--w) * 2); height: var(--h);
   perspective: 1800px;
 }
+.phone[data-finish='white'] {
+  /* Star White */
+  --ti: linear-gradient(160deg, #fbfaf7 0%, #d8d5ce 22%, #f1efea 50%, #cbc8c0 78%, #f4f2ed 100%);
+  --ti-edge: linear-gradient(90deg, #bdb9b1, #f7f6f2 45%, #e1ded7 55%, #b7b3aa);
+  --ti-btn: linear-gradient(180deg, #f3f1ec, #c4c0b8);
+  --ti-hinge: linear-gradient(90deg, #a9a59c, #f2f0eb 50%, #a9a59c);
+}
+/* No preserve-3d on .phone: the moving half is always on the viewer's side of
+   the fixed half, so plain DOM paint order is correct and avoids 3D sorting bugs. */
 .half { position: absolute; top: 0; width: var(--w); height: var(--h); }
 .half.fixed { left: var(--w); transform-origin: left center; }
 .half.moving { left: 0; transform-origin: right center; transform-style: preserve-3d; }
-.half canvas, .face canvas { display: block; width: 100%; height: 100%; }
-.half.fixed { border-radius: 0 26px 26px 0; overflow: hidden; background: #000; box-shadow: inset 0 0 0 1px #2a2a30; }
-.face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; background: #000; }
-.face.front { border-radius: 26px 0 0 26px; box-shadow: inset 0 0 0 1px #2a2a30; }
-.face.back { transform: rotateY(180deg); border-radius: 26px 0 0 26px; box-shadow: 0 0 0 5px #1c1c20, 0 0 0 6px #33333a; }
+
+.body {
+  position: absolute; inset: 0; background: var(--ti); padding: var(--rim); overflow: hidden;
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.35), inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+.glass { position: relative; height: 100%; background: var(--glass); padding: var(--bez); }
+.screen { position: relative; height: 100%; overflow: hidden; background: #000; }
+.screen canvas { display: block; width: 100%; height: 100%; }
+/* Cover-glass reflection. */
+.screen::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.02) 32%, transparent 33%);
+}
+
+/* Inner display: continuous across the hinge, so no rim or bezel on that side. */
+.fixed .body { padding-left: 0; border-radius: var(--rh) var(--r) var(--r) var(--rh); }
+.fixed .glass { padding-left: 0; border-radius: 0 calc(var(--r) - var(--rim)) calc(var(--r) - var(--rim)) 0; }
+.fixed .screen { border-radius: 0 var(--sr) var(--sr) 0; }
+.face.front { padding-right: 0; border-radius: var(--r) var(--rh) var(--rh) var(--r); }
+.front .glass { padding-right: 0; border-radius: calc(var(--r) - var(--rim)) 0 0 calc(var(--r) - var(--rim)); }
+.front .screen { border-radius: var(--sr) 0 0 var(--sr); }
+/* Cover display: its own panel, rounded on all four corners. In local
+   coordinates the left edge is the hinge. */
+.face.back { border-radius: var(--rh) var(--r) var(--r) var(--rh); }
+.back .glass { border-radius: calc(var(--rh) - 1px) calc(var(--r) - var(--rim)) calc(var(--r) - var(--rim)) calc(var(--rh) - 1px); }
+.back .screen { border-radius: var(--sr); }
+
+/* Fold crease: a faint highlight/shadow pair that deepens as the hinge closes. */
+.fixed .screen::before, .front .screen::before {
+  content: ''; position: absolute; top: 0; bottom: 0; width: 7px; z-index: 1; pointer-events: none;
+  opacity: calc(0.35 + var(--bend, 0) * 0.65);
+}
+.fixed .screen::before { left: 0; background: linear-gradient(90deg, rgba(0, 0, 0, 0.35), rgba(255, 255, 255, 0.07) 40%, transparent); }
+.front .screen::before { right: 0; background: linear-gradient(270deg, rgba(0, 0, 0, 0.35), rgba(255, 255, 255, 0.07) 40%, transparent); }
+
+/* Lighting, driven from the hinge angle in main.ts. */
+.shade { position: absolute; inset: 0; pointer-events: none; z-index: 2; border-radius: inherit; }
+.fixed .shade { background: linear-gradient(90deg, rgba(0, 0, 0, 0.9), transparent 75%); opacity: var(--occlude, 0); }
+.front .shade { background: #000; opacity: var(--lit-front, 0); }
+.back .shade { background: #000; opacity: var(--lit-back, 0); }
+
+.face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+/* The two faces sit --t apart, so the closed phone has real thickness. */
+.face.back { transform: translateZ(calc(var(--t) * -1)) rotateY(180deg); }
+.edge {
+  position: absolute; top: calc(var(--r) * 0.55); bottom: calc(var(--r) * 0.55); left: calc(var(--t) / -2); width: var(--t);
+  background: var(--ti-edge); border-radius: 3px;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  /* Faces outward (-x), so it only shows once the panel swings past the viewer. */
+  transform: translateZ(calc(var(--t) / -2)) rotateY(-90deg);
+}
+
+.island {
+  position: absolute; left: 50%; top: 2.6%; width: 29%; aspect-ratio: 3.4; z-index: 1;
+  transform: translateX(-50%); background: #000; border-radius: 999px;
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+}
+.island::after {
+  content: ''; position: absolute; right: 13%; top: 50%; width: 22%; aspect-ratio: 1; transform: translateY(-50%);
+  border-radius: 50%; background: radial-gradient(circle at 35% 35%, #2b3550, #0b0d14 60%);
+}
+
+.hinge { position: absolute; left: -6px; width: 12px; top: 1px; bottom: 1px; border-radius: 6px; background: var(--ti-hinge); }
+.btn { position: absolute; background: var(--ti-btn); border-radius: 2px; }
+.btn.vol, .btn.cam { right: -2.5px; width: 4px; }
+.btn.vol.up { top: 19%; height: 8.5%; }
+.btn.vol.down { top: 29.5%; height: 8.5%; }
+.btn.cam { top: 64%; height: 10%; border-radius: 1.5px; }
+.btn.side { top: -2.5px; height: 4px; right: 17%; width: 15%; }
+
+/* ---------------------------------------------------------------------------
+   Flat screens and layout previews: the same rim + bezel, drawn with rings. */
 
 .flat { padding: 56px 0; border-top: 1px solid var(--line); }
-.pair { display: flex; gap: 40px; align-items: flex-end; flex-wrap: wrap; margin-top: 32px; }
+.pair { display: flex; gap: 48px; align-items: flex-end; flex-wrap: wrap; margin-top: 40px; padding: 0 12px; }
 figure { margin: 0; }
-figcaption { margin-top: 12px; font-size: 13px; color: var(--mute); font-family: ui-monospace, monospace; }
-.screen { border-radius: 22px; overflow: hidden; box-shadow: 0 0 0 5px #1c1c20, 0 0 0 6px #33333a; background: #000; }
-.screen.cover { width: 233px; height: 339px; }
-.screen.inner { width: 481px; height: 339px; }
-.screen canvas { width: 100%; height: 100%; display: block; }
+figcaption { margin-top: 22px; font-size: 13px; color: var(--mute); font-family: ui-monospace, monospace; }
+.hw {
+  position: relative; overflow: hidden; background: #000;
+  box-shadow:
+    0 0 0 var(--bz, 7px) #030304,
+    0 0 0 calc(var(--bz, 7px) + 2.5px) #3a3c42,
+    0 0 0 calc(var(--bz, 7px) + 3px) rgba(0, 0, 0, 0.35),
+    0 26px 36px -14px rgba(0, 0, 0, 0.35);
+}
+.hw.cover-hw .island { top: 2.4%; }
+.screen-flat { border-radius: 20px; }
+.screen-flat.cover { width: 233px; height: 339px; }
+.screen-flat.inner { width: 481px; height: 339px; }
+.screen-flat canvas { width: 100%; height: 100%; display: block; }
 
 .layout { padding: 56px 0; border-top: 1px solid var(--line); }
-.devices { display: flex; flex-wrap: wrap; gap: 36px; align-items: flex-end; margin-top: 32px; }
+.devices { display: flex; flex-wrap: wrap; gap: 44px; align-items: flex-end; margin-top: 40px; padding: 0 8px; }
 .device figcaption b { color: var(--ink); font-weight: 500; }
-.device .frame {
-  position: relative; background: #f6f5f1; color: #111; border-radius: 18px; overflow: hidden;
-  box-shadow: 0 0 0 5px #1c1c20, 0 0 0 6px #33333a; font-size: 11px;
-}
+.device .frame { --bz: 5px; color: #111; border-radius: 18px; font-size: 11px; background: #f6f5f1; }
 .device .frame.bent { transform: perspective(900px) rotateY(var(--bend, 0deg)); }
+.device .frame .island { top: 9px; width: 30%; }
+.device .frame.has-island .pane { padding-top: 30px; }
 .app { display: grid; width: 100%; height: 100%; }
 .pane { overflow: hidden; padding: 10px; min-width: 0; min-height: 0; }
 .pane.list { background: #fff; }
@@ -87,7 +196,7 @@ figcaption { margin-top: 12px; font-size: 13px; color: var(--mute); font-family:
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; }
   .stage { height: 420px; }
-  .phone { --w: 160px; --h: 230px; }
+  .phone { --w: 160px; --h: 229px; --t: 10px; --rim: 2px; --bez: 5px; --r: 21px; --rh: 6px; }
   main, .top { padding-left: 20px; padding-right: 20px; }
-  .screen.inner { width: 100%; max-width: 481px; height: auto; aspect-ratio: 2670 / 1878; }
+  .screen-flat.inner { width: 100%; max-width: 481px; height: auto; aspect-ratio: 2670 / 1878; }
 }
