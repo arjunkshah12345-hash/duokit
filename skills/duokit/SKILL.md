@@ -91,13 +91,20 @@ classify({
 
 ## Realistic iPhone Duo mockup (HTML/CSS)
 
-For marketing pages or demos, draw hardware, not a dark rectangle. `web/demo/index.html` + `style.css` is the reference build. Rules it follows:
+For marketing pages or demos, draw hardware, not a dark rectangle, and put real iOS on its screens. `web/demo/index.html`, `style.css` and `ios.ts` are the reference build. Rules it follows:
 
-- **Proportions from the spec sheet.** Open: 164.6 × 117.8 × 5.2 mm per half. Closed: 84.1 × 117.8 × 11.3 mm. Cover display 1398 × 2034 px. Inner display 2670 × 1878 px with a crease down the middle. So each half is 82.3 : 117.8 (`--w: 240px; --h: 344px`).
+- **Proportions from the spec sheet.** Open: 164.6 × 117.8 × 5.2 mm per half. Closed: 84.1 × 117.8 × 11.3 mm. Cover display 1398 × 2034 px. Inner display 2670 × 1878 px. So each half is 82.3 : 117.8 (`--w: 240px; --h: 344px`).
 - **Layers, outside in:** a titanium rim (~1 mm; a multi-stop gradient, not a flat colour), then black cover glass as the bezel (~2.5 mm), then the display with concentric corner radii (`screen r = outer r − rim − bezel`). Add a faint diagonal reflection over the glass.
 - **Finishes:** Night Sky (dark titanium) and Star White (warm light titanium). Keep the bezel black on both.
-- **Details that sell it:** a Dynamic Island on the cover only (the inner camera is under the display), a status bar painted into the screen content, volume and Camera Control on the outer edge, the side button (Touch ID) on top, and a titanium hinge barrel showing in the small notches at the hinge. Leave out rim and bezel on the hinge side of the inner screen: it's one continuous panel.
+- **Details that sell it:** a Dynamic Island on the cover only (the inner camera is under the display), a status bar painted into the screen content, volume and Camera Control on the outer edge, the side button (Touch ID) on top, and a titanium hinge barrel showing in the small notches at the hinge. Leave out rim and bezel on the hinge side of the inner screen: it's one continuous panel. Don't draw a crease line. Overlap the two halves by 1px so anti-aliasing doesn't leave a seam, and lay one glass reflection across both halves rather than one per half.
 - **Depth:** give the moving half real thickness. Put its front face at z = 0, its back (cover) face at `translateZ(-t) rotateY(180deg)`, and an outward-facing edge strip with `backface-visibility: hidden`. Don't use `preserve-3d` across both halves, because Chrome mis-sorts them; paint order (the moving half after the fixed half) is enough.
-- **Lighting from the hinge angle:** darken each face by `(1 − cos θ)/2` as it turns away, add shadow near the hinge on the fixed half as it closes, and deepen the crease as it bends.
+- **Lighting from the hinge angle:** darken each face by `(1 − cos θ)/2` as it turns away, and add shadow near the hinge on the fixed half as it closes.
 - **Stage:** a white page with a soft studio shadow (`filter: drop-shadow(...)` on the stage), so the shadow follows the silhouette while the phone folds.
+- **Screen content must look like iOS, not a wireframe.** No coloured squares or grey bars. In `ios.ts` the home screen is painted in points at 1.5 px/pt:
+  - app icons are drawn SVGs (Phone, Messages, Safari, Mail, Photos, Settings…) clipped to a 22.5% squircle, with 12pt white labels with a soft shadow
+  - real widgets: Weather, Calendar, Photos
+  - a status bar: the time either side of the Dynamic Island on the cover, and time + date iPad-style on the inner screen
+  - a frosted dock and Search pill: the wallpaper blurred through the glass
+  - on the inner screen, iPad-style: widgets on the left half, apps on the right, and a dock with recents
+- **App previews:** build the app at real iOS point sizes (17pt body, 34pt large title, `#007AFF` tint, 0.5px `#c6c6c8` separators, a home indicator), then `transform: scale()` it into the frame. Don't hand-shrink fonts. Place split panes explicitly (`grid-column` / `grid-row`); auto-placement can drop a pane into the hinge track.
 - **Check it** at 0°, ~70° in the three-quarter view, ~125°, and 180°, in both finishes, plus a ~390 px wide viewport.

@@ -1,112 +1,11 @@
 import { UnfoldRenderer, classify, playUnfold, type DuoInput, type DuoState, type Playback } from '../src'
+import { loadIcons, paintHome } from './ios'
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T
 
-// ---------------------------------------------------------------------------
-// Screen content: a home screen painted at half the Duo's native resolution.
-
-const COVER = { w: 699, h: 1017, cols: 4, rows: 6 }
-const INNER = { w: 1335, h: 939, cols: 8, rows: 4 }
-
-const ICONS = ['#ff6b5e', '#ffb340', '#ffd84d', '#4cd97b', '#3ec7e0', '#4a8dff', '#8b6bff', '#ff5fa8', '#f2f1ee', '#2b2b30']
-
-function paintWallpaper(ctx: CanvasRenderingContext2D, w: number, h: number, img: HTMLImageElement | null) {
-  if (img) {
-    const s = Math.max(w / img.naturalWidth, h / img.naturalHeight)
-    const iw = img.naturalWidth * s
-    const ih = img.naturalHeight * s
-    ctx.drawImage(img, (w - iw) / 2, (h - ih) / 2, iw, ih)
-    return
-  }
-  const g = ctx.createLinearGradient(0, 0, w, h)
-  g.addColorStop(0, '#0d1b3d')
-  g.addColorStop(0.5, '#2a1458')
-  g.addColorStop(1, '#5a1236')
-  ctx.fillStyle = g
-  ctx.fillRect(0, 0, w, h)
-  const blobs: [number, number, number, string][] = [
-    [0.3, 0.35, 0.55, 'rgba(255,120,80,0.75)'],
-    [0.72, 0.6, 0.5, 'rgba(70,140,255,0.7)'],
-    [0.5, 0.9, 0.45, 'rgba(255,70,170,0.55)'],
-    [0.85, 0.15, 0.35, 'rgba(255,210,90,0.5)'],
-  ]
-  const m = Math.max(w, h)
-  for (const [x, y, r, c] of blobs) {
-    const rg = ctx.createRadialGradient(x * w, y * h, 0, x * w, y * h, r * m)
-    rg.addColorStop(0, c)
-    rg.addColorStop(1, 'rgba(0,0,0,0)')
-    ctx.fillStyle = rg
-    ctx.fillRect(0, 0, w, h)
-  }
-}
-
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  ctx.beginPath()
-  ctx.roundRect(x, y, w, h, r)
-  ctx.fill()
-}
-
-// Signal bars and battery, top right, sized like iOS's status bar.
-function paintStatus(ctx: CanvasRenderingContext2D, w: number, unit: number) {
-  const s = unit * 0.16
-  const y = unit * 0.42
-  let x = w - unit * 0.32 - s * 2.6
-  ctx.save()
-  ctx.fillStyle = 'rgba(255,255,255,0.95)'
-  ctx.strokeStyle = 'rgba(255,255,255,0.45)'
-  ctx.lineWidth = s * 0.12
-  ctx.beginPath()
-  ctx.roundRect(x, y - s * 0.6, s * 2.3, s * 1.2, s * 0.35)
-  ctx.stroke()
-  roundRect(ctx, x + s * 0.18, y - s * 0.42, s * 1.65, s * 0.84, s * 0.22)
-  ctx.fillStyle = 'rgba(255,255,255,0.45)'
-  roundRect(ctx, x + s * 2.4, y - s * 0.2, s * 0.14, s * 0.4, s * 0.07)
-  ctx.fillStyle = 'rgba(255,255,255,0.95)'
-  x -= s * 2.2
-  for (let i = 0; i < 4; i++) roundRect(ctx, x + i * s * 0.45, y + s * 0.55 - s * (0.4 + i * 0.27), s * 0.32, s * (0.4 + i * 0.27), s * 0.08)
-  ctx.restore()
-}
-
-function paintHome(spec: typeof COVER, img: HTMLImageElement | null): HTMLCanvasElement {
-  const c = document.createElement('canvas')
-  c.width = spec.w
-  c.height = spec.h
-  const ctx = c.getContext('2d')!
-  paintWallpaper(ctx, spec.w, spec.h, img)
-
-  const unit = Math.min(spec.w / spec.cols, spec.h / (spec.rows + 2.4))
-  ctx.fillStyle = 'rgba(255,255,255,0.95)'
-  ctx.textAlign = 'center'
-  ctx.font = `600 ${unit * 0.95}px -apple-system, system-ui, sans-serif`
-  ctx.fillText('9:41', spec.w / 2, unit * 1.5)
-  ctx.font = `500 ${unit * 0.22}px -apple-system, system-ui, sans-serif`
-  ctx.fillText('Saturday, October 24', spec.w / 2, unit * 1.86)
-  paintStatus(ctx, spec.w, unit)
-
-  const icon = unit * 0.62
-  const gx = spec.w / spec.cols
-  const top = unit * 2.25
-  const gy = (spec.h - top - unit * 1.3) / spec.rows
-  let k = 0
-  for (let r = 0; r < spec.rows - 1; r++) {
-    for (let col = 0; col < spec.cols; col++) {
-      ctx.fillStyle = ICONS[(k++ * 7 + r) % ICONS.length]!
-      roundRect(ctx, col * gx + (gx - icon) / 2, top + r * gy + (gy - icon) / 2, icon, icon, icon * 0.23)
-    }
-  }
-  // Dock
-  const dockH = icon * 1.35
-  const dockW = Math.min(spec.w - unit * 0.4, gx * Math.min(spec.cols, 6))
-  ctx.fillStyle = 'rgba(255,255,255,0.18)'
-  roundRect(ctx, (spec.w - dockW) / 2, spec.h - dockH - unit * 0.25, dockW, dockH, dockH * 0.38)
-  const dockN = Math.min(spec.cols, 6)
-  for (let i = 0; i < dockN; i++) {
-    ctx.fillStyle = ICONS[(i * 3 + 1) % ICONS.length]!
-    const step = dockW / dockN
-    roundRect(ctx, (spec.w - dockW) / 2 + i * step + (step - icon) / 2, spec.h - dockH - unit * 0.25 + (dockH - icon) / 2, icon, icon, icon * 0.23)
-  }
-  return c
-}
+// Screen content: an iOS home screen painted at half the Duo's native resolution.
+const COVER = { kind: 'cover', w: 699, h: 1017 } as const
+const INNER = { kind: 'inner', w: 1335, h: 939 } as const
 
 // ---------------------------------------------------------------------------
 // Unfold section
@@ -156,7 +55,6 @@ function draw(a: number) {
   // Lighting: each face darkens as it turns away from the viewer, and the
   // fixed half falls into the moving half's shadow near the hinge.
   const rad = (d: number) => (d * Math.PI) / 180
-  phone.style.setProperty('--bend', String(1 - a / 180))
   phone.style.setProperty('--lit-front', String(((1 - Math.cos(rad(180 - a))) / 2) * 0.55))
   phone.style.setProperty('--lit-back', String(((1 - Math.cos(rad(a))) / 2) * 0.55))
   phone.style.setProperty('--occlude', String(Math.max(0, 1 - a / 150) ** 2 * 0.6))
@@ -201,6 +99,7 @@ $<HTMLInputElement>('file').addEventListener('change', (e) => {
 addEventListener('resize', () => draw(angle))
 
 loadContent()
+loadIcons().then(loadContent)
 // Open once on load so the page explains itself.
 setTimeout(() => play(false), 500)
 
@@ -243,25 +142,77 @@ const SCENARIOS: { name: string; input: DuoInput; bend?: number; island?: boolea
 ]
 
 const K = 0.36
-const COLORS = ['#ff6b5e', '#4a8dff', '#4cd97b', '#ffb340', '#8b6bff', '#3ec7e0', '#ff5fa8']
 
-function listPane(): string {
-  const rows = COLORS.map((c, i) => `<div class="row${i === 1 ? ' sel' : ''}" style="--c:${c}"><i></i><span></span></div>`)
-  return `<div class="pane list"><h4>Inbox</h4>${rows.join('')}</div>`
-}
-function detailPane(): string {
-  const bars = [90, 70, 95, 60, 85, 40].map((w) => `<div class="bar" style="width:${w}%"></div>`)
-  return `<div class="pane detail"><h4>Design review</h4>${bars.join('')}</div>`
+// A Mail-style app at real iOS point sizes, scaled down into each frame.
+const MAILS = [
+  { from: 'Maya Chen', time: '9:41 AM', subject: 'Design review notes', preview: 'Great session today. I pulled the open questions from the fold layouts into one doc so we can…', unread: true },
+  { from: 'GitHub', time: '9:12 AM', subject: '[duokit] CI passed on main', preview: 'All checks have passed: swift ✓ web ✓. View the workflow run for details.', unread: false },
+  { from: 'Apple Developer', time: '8:30 AM', subject: 'Get your app ready for iPhone Duo', preview: 'Adapt your layouts for the cover and inner displays, and respond to hinge posture changes…', unread: true },
+  { from: 'Jordan Lee', time: 'Yesterday', subject: 'Dinner Saturday?', preview: 'We’re thinking 7:30 at the usual place. Let me know if that works for you two.', unread: false },
+  { from: 'Figma', time: 'Yesterday', subject: 'Maya commented on Duo Mail', preview: '“Can the toolbar sit on the bottom half in tabletop?”', unread: false },
+  { from: 'Sam Rivera', time: 'Thursday', subject: 'Photos from the trip', preview: 'Uploaded everything to the shared album. The sunset ones came out amazing.', unread: false },
+  { from: 'Calendar', time: 'Thursday', subject: 'Invitation: Hinge sync', preview: 'Friday, Oct 30 · 10:00 – 10:30 AM · Join with FaceTime', unread: false },
+]
+
+const STATUS_ICONS = `<svg class="sb-icons" width="68" height="13" viewBox="0 0 68 13" fill="currentColor"><rect x="0" y="8" width="3.2" height="4" rx="1"/><rect x="4.6" y="5.6" width="3.2" height="6.4" rx="1"/><rect x="9.2" y="3.2" width="3.2" height="8.8" rx="1"/><rect x="13.8" y="0.8" width="3.2" height="11.2" rx="1"/><path d="M30.5 12.2l-2.6-2.6a3.7 3.7 0 0 1 5.2 0zM26 7.8a6.3 6.3 0 0 1 9 0l1.7-1.7a8.7 8.7 0 0 0-12.4 0zM22.7 4.4a11 11 0 0 1 15.6 0L40 2.7a13.4 13.4 0 0 0-19 0z"/><rect x="43.5" y="0.5" width="21.5" height="12" rx="3.8" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="45.5" y="2.5" width="15" height="8" rx="2.2"/><path d="M66.3 4.5v4a2.2 2.2 0 0 0 0-4z" fill-opacity=".4"/></svg>`
+
+const svgIcon = (d: string) => `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`
+const I = {
+  compose: svgIcon('<path d="M20 12.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6.5"/><path d="M17.5 3.5l3 3L12 15l-4 1 1-4z"/>'),
+  flag: svgIcon('<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'),
+  folder: svgIcon('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'),
+  trash: svgIcon('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'),
+  reply: svgIcon('<path d="M10 8L4 13l6 5M4 13h10a6 6 0 0 1 6 6"/>'),
+  search: svgIcon('<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>'),
 }
 
-function renderApp(s: DuoState): string {
-  if (s.display !== 'inner' || !s.fold) return `<div class="app">${listPane()}</div>`
-  const f = s.fold
-  const vertical = s.foldAxis === 'vertical'
-  const gap = Math.max((vertical ? f.width : f.height) * K, 1)
-  const track = `${(vertical ? f.x : f.y) * K}px ${gap}px minmax(0,1fr)`
-  const prop = vertical ? 'grid-template-columns' : 'grid-template-rows'
-  return `<div class="app" style="${prop}:${track}">${listPane()}<div class="foldline" style="--dir:${vertical ? '0deg' : '90deg'}"></div>${detailPane()}</div>`
+function listPane(selected: boolean, style = ''): string {
+  const rows = MAILS.map(
+    (m, i) => `<div class="mail${selected && i === 0 ? ' sel' : ''}">
+      <i class="dot${m.unread ? '' : ' read'}"></i>
+      <div class="m"><div class="m1"><b>${m.from}</b><span>${m.time} <em>›</em></span></div><div class="m2">${m.subject}</div><div class="m3">${m.preview}</div></div>
+    </div>`,
+  )
+  return `<div class="pane list" style="${style}">
+    <div class="nav"><span>‹ Mailboxes</span><span>Edit</span></div>
+    <h1>Inbox</h1>
+    <div class="search">${I.search}<span>Search</span></div>
+    ${rows.join('')}
+    <div class="tb"><span></span><span class="tb-c">Updated Just Now<small>3 Unread</small></span><span class="tb-r">${I.compose}</span></div>
+  </div>`
+}
+
+function detailPane(below: boolean, style = ''): string {
+  return `<div class="pane detail${below ? ' below' : ''}" style="${style}">
+    <div class="dhead"><i class="av">MC</i><div class="who"><b>Maya Chen</b><span>To: You</span></div><span class="when">9:41 AM</span></div>
+    <h2>Design review notes</h2>
+    <p>Hi all,</p>
+    <p>Great session today. On the cover screen the inbox stays a single column; open the phone and the message slides in beside it, never under the hinge.</p>
+    <p>In tabletop the message reads on the top half and the reply controls drop to the bottom half, like the Camera app.</p>
+    <div class="attach"><i></i><div><b>fold-layouts.png</b><span>2.4 MB</span></div></div>
+    <div class="tb dtb">${I.flag}${I.folder}${I.trash}${I.reply}${I.compose}</div>
+  </div>`
+}
+
+function renderApp(s: DuoState, island: boolean): string {
+  const { width, height } = s.viewport
+  const sb = island
+    ? `<div class="sb notch"><b>9:41</b><span></span>${STATUS_ICONS}</div>`
+    : `<div class="sb"><b>9:41</b><span class="sb-date">Sat Oct 24</span>${STATUS_ICONS}</div>`
+  let body: string
+  if (s.display !== 'inner' || !s.fold) {
+    body = `<div class="ios-grid">${listPane(false)}</div>`
+  } else {
+    const f = s.fold
+    const vertical = s.foldAxis === 'vertical'
+    // Flat: the panes meet with a hairline. Bent: leave the hinge region empty.
+    const gap = s.foldIsOccluding ? `${vertical ? f.width : f.height}px` : '0.5px'
+    const at = vertical ? f.x : f.y
+    const prop = vertical ? 'grid-template-columns' : 'grid-template-rows'
+    const track = vertical ? 'grid-column' : 'grid-row'
+    body = `<div class="ios-grid" style="${prop}:${at}px ${gap} minmax(0,1fr)">${listPane(true, `${track}:1${vertical ? '' : ';--tbh:50px'}`)}<div class="gap${s.foldIsOccluding ? ' hinge' : ''}" style="${track}:2"></div>${detailPane(!vertical, `${track}:3`)}</div>`
+  }
+  return `<div class="ios${island ? ' has-island' : ''}" style="width:${width}px;height:${height}px;transform:scale(${K})">${sb}${body}<i class="hi"></i></div>`
 }
 
 $('devices').innerHTML = SCENARIOS.map(({ name, input, bend, island }) => {
@@ -269,7 +220,7 @@ $('devices').innerHTML = SCENARIOS.map(({ name, input, bend, island }) => {
   const { width, height } = input.viewport
   const summary = `display: ${s.display}\nposture: ${s.posture}\nfold:    ${s.fold ? `${s.foldAxis} @ ${s.foldAxis === 'vertical' ? s.fold.x : s.fold.y}px` : 'none'}`
   return `<figure class="device">
-    <div class="hw frame${bend ? ' bent' : ''}${island ? ' has-island' : ''}" style="width:${width * K}px;height:${height * K}px;${bend ? `--bend:${bend}deg` : ''}">${renderApp(s)}${island ? '<i class="island"></i>' : ''}</div>
+    <div class="hw frame${bend ? ' bent' : ''}" style="width:${width * K}px;height:${height * K}px;${bend ? `--bend:${bend}deg` : ''}">${renderApp(s, !!island)}${island ? '<i class="island"></i>' : ''}</div>
     <figcaption><b>${name}</b><div class="state">${summary}</div></figcaption>
   </figure>`
 }).join('')
