@@ -68,7 +68,9 @@ input[type='range'] { width: 100%; accent-color: var(--ink); }
   --ti-hinge: linear-gradient(90deg, #17181b, #4b4e55 50%, #17181b);
   --glass: #030304;
   position: relative; width: calc(var(--w) * 2); height: var(--h);
-  perspective: 1800px;
+  /* Same eye distance the model ray-casts for (UNFOLD.viewDistance panel
+     widths), so content on the swinging panel holds still on screen. */
+  perspective: calc(var(--w) * 3.75);
 }
 .phone[data-finish='white'] {
   /* Star White */

@@ -19,13 +19,17 @@ public extension View {
         let roleValue: Float = role == .cover ? 0 : 1
         return visualEffect { content, proxy in
             let width = proxy.size.width
+            let height = proxy.size.height
             let blur = f.maxBlur * f.motion * width
-            let offset = CGSize(width: width * (1 - f.stretch) + blur, height: blur)
+            // Perspective reaches up to D / (D - 1) past the panel at the free edge.
+            let reach = Unfold.viewDistance / (Unfold.viewDistance - 1) - 1
+            let offset = CGSize(width: width * (1 - f.stretch + reach) + blur, height: height * reach / 2 + blur)
             return content.layerEffect(
                 ShaderLibrary.bundle(.module).duoUnfold(
                     .boundingRect,
                     .float(Float(f.motion)),
                     .float(Float(f.stretch)),
+                    .float(Float(f.lift)),
                     .float(Float(f.opacity)),
                     .float(Float(f.maxBlur)),
                     .float(roleValue),

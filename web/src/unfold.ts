@@ -1,7 +1,7 @@
 /**
  * Renderers for the unfold effect.
  *
- *  - UnfoldRenderer: WebGL2, per-pixel progressive blur + shade + stretch.
+ *  - UnfoldRenderer: WebGL2, per-pixel progressive blur + shade + perspective.
  *    This is the faithful one. Feed it an image/canvas/video of the screen.
  *  - unfoldStyle / applyUnfoldStyle: a CSS approximation for live DOM
  *    (stretch + uniform blur + a shade mask). Cheaper, no snapshot needed.
@@ -11,6 +11,7 @@
 import {
   UNFOLD,
   blurAt,
+  isMoving,
   shadeAt,
   unfoldAngleAt,
   unfoldFrame,
@@ -40,15 +41,19 @@ uniform sampler2D u_tex;
 uniform vec2 u_res;
 uniform vec2 u_texSize;
 uniform vec4 u_frame;   // motion, stretch, opacity, maxBlur
+uniform float u_lift;   // sin of the moving panel's tilt
 uniform float u_role;   // 0 cover, 1 inner
 uniform float u_flip;   // 1 when the hinge is on the trailing side
 uniform float u_fit;    // 0 cover, 1 contain
 in vec2 v_uv;
 out vec4 outColor;
 
-const float FALLOFF = ${UNFOLD.falloff.toFixed(4)};
-const float SHADE_START = ${UNFOLD.shadeStart.toFixed(4)};
+const float VIEW = ${UNFOLD.viewDistance.toFixed(4)};
+const float BLUR_FALLOFF = ${UNFOLD.blurFalloff.toFixed(4)};
+const float FIXED_BLUR = ${UNFOLD.fixedBlur.toFixed(4)};
 const float SHADE_GAIN = ${UNFOLD.shadeGain.toFixed(4)};
+const float SHADE_FALLOFF = ${UNFOLD.shadeFalloff.toFixed(4)};
+const float FIXED_DIM = ${UNFOLD.fixedDim.toFixed(4)};
 
 vec2 fitScale() {
   float ca = u_res.x / u_res.y;
@@ -62,21 +67,21 @@ vec2 fitScale() {
 void main() {
   float motion = u_frame.x, stretch = u_frame.y, opacity = u_frame.z, maxBlur = u_frame.w;
   float x = u_flip > 0.5 ? 1.0 - v_uv.x : v_uv.x;
-  float g, sx;
-  if (u_role < 0.5) {
-    g = clamp(x, 0.0, 1.0);
-    sx = x * stretch;
-  } else {
-    g = clamp(abs(x - 0.5) * 2.0, 0.0, 1.0);
-    sx = x < 0.5 ? 0.5 - (0.5 - x) * stretch : x;
-  }
+  bool moving = u_role < 0.5 || x < 0.5;
+  float g = u_role < 0.5 ? clamp(x, 0.0, 1.0) : clamp(abs(x - 0.5) * 2.0, 0.0, 1.0);
+
+  // Ray-cast the moving panel onto the plane of the open screen.
+  float k = moving ? VIEW / (VIEW - g * u_lift) : 1.0;
+  float reach = g * stretch * k;
+  float sx = !moving ? x : (u_role < 0.5 ? reach : 0.5 - reach * 0.5);
   if (u_flip > 0.5) sx = 1.0 - sx;
+  float sy = 0.5 + (v_uv.y - 0.5) * k;
 
   vec2 s = fitScale();
-  vec2 uv = (vec2(sx, v_uv.y) - 0.5) * s + 0.5;
+  vec2 uv = (vec2(sx, sy) - 0.5) * s + 0.5;
 
-  // Progressive blur: radius grows with distance from the hinge.
-  float rpx = maxBlur * motion * pow(g, FALLOFF) * u_res.x;
+  // Progressive blur: sharp at the hinge, cubic toward the edge.
+  float rpx = maxBlur * motion * pow(g, BLUR_FALLOFF) * (moving ? 1.0 : FIXED_BLUR) * u_res.x;
   vec2 step = 0.5 * rpx / u_res * s;
   float texelsPerPx = u_texSize.x * s.x / u_res.x;
   float lod = max(0.0, log2(max(rpx * texelsPerPx * 0.5, 1.0)));
@@ -93,9 +98,8 @@ void main() {
 
   if (u_fit > 0.5 && (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)) color = vec3(0.0);
 
-  float d = clamp((g - SHADE_START) / (1.0 - SHADE_START), 0.0, 1.0);
-  float shade = (1.0 - min(1.0, SHADE_GAIN * motion * pow(d, FALLOFF))) * opacity;
-  outColor = vec4(color * shade, 1.0);
+  float loss = moving ? SHADE_GAIN * motion * pow(g, SHADE_FALLOFF) : FIXED_DIM * motion;
+  outColor = vec4(color * (1.0 - loss) * opacity, 1.0);
 }`
 
 function compile(gl: WebGL2RenderingContext, type: number, src: string): WebGLShader {
@@ -137,7 +141,7 @@ export class UnfoldRenderer {
     gl.linkProgram(program)
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(`duokit: ${gl.getProgramInfoLog(program)}`)
     this.program = program
-    for (const n of ['u_tex', 'u_res', 'u_texSize', 'u_frame', 'u_role', 'u_flip', 'u_fit']) {
+    for (const n of ['u_tex', 'u_res', 'u_texSize', 'u_frame', 'u_lift', 'u_role', 'u_flip', 'u_fit']) {
       this.u[n] = gl.getUniformLocation(program, n)
     }
 
@@ -185,6 +189,7 @@ export class UnfoldRenderer {
     gl.uniform2f(u.u_res!, this.canvas.width, this.canvas.height)
     gl.uniform2f(u.u_texSize!, this.texSize[0], this.texSize[1])
     gl.uniform4f(u.u_frame!, f.motion, f.stretch, f.opacity, f.maxBlur)
+    gl.uniform1f(u.u_lift!, f.lift)
     gl.uniform1f(u.u_role!, this.opts.role === 'cover' ? 0 : 1)
     gl.uniform1f(u.u_flip!, this.opts.hinge === 'trailing' ? 1 : 0)
     gl.uniform1f(u.u_fit!, this.opts.fit === 'contain' ? 1 : 0)
@@ -213,10 +218,10 @@ export function unfoldStyle(
     const u = i / 10
     const x = leftToRight(u)
     const g = role === 'cover' ? x : Math.abs(x - 0.5) * 2
-    stops.push(`rgba(0,0,0,${shadeAt(g, f).toFixed(3)}) ${u * 100}%`)
+    stops.push(`rgba(0,0,0,${shadeAt(g, f, isMoving(x, role)).toFixed(3)}) ${u * 100}%`)
   }
-  // Mean of the progressive radius over g: ∫ g^1.35 dg = 1 / 2.35.
-  const blur = blurAt(1, f) * width / (UNFOLD.falloff + 1)
+  // Mean of the progressive radius over g: ∫ g^n dg = 1 / (n + 1).
+  const blur = blurAt(1, f) * width / (UNFOLD.blurFalloff + 1)
   // The CSS version can only stretch the cover screen as a whole.
   const scale = role === 'cover' ? 1 / f.stretch : 1
   const mask = `linear-gradient(to right, ${stops.join(', ')})`

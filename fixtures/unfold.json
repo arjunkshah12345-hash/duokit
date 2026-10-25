@@ -6,6 +6,7 @@
    "frame": {
     "motion": 0,
     "stretch": 1,
+    "lift": 0,
     "opacity": 1,
     "maxBlur": 0.051502
    },
@@ -13,42 +14,54 @@
     {
      "u": 0,
      "g": 0,
+     "moving": true,
      "sampleU": 0,
+     "sampleV": 0,
      "blur": 0,
      "shade": 1
     },
     {
      "u": 0.1,
      "g": 0.1,
+     "moving": true,
      "sampleU": 0.1,
+     "sampleV": 0,
      "blur": 0,
      "shade": 1
     },
     {
      "u": 0.25,
      "g": 0.25,
+     "moving": true,
      "sampleU": 0.25,
+     "sampleV": 0,
      "blur": 0,
      "shade": 1
     },
     {
      "u": 0.5,
      "g": 0.5,
+     "moving": true,
      "sampleU": 0.5,
+     "sampleV": 0,
      "blur": 0,
      "shade": 1
     },
     {
      "u": 0.75,
      "g": 0.75,
+     "moving": true,
      "sampleU": 0.75,
+     "sampleV": 0,
      "blur": 0,
      "shade": 1
     },
     {
      "u": 1,
      "g": 1,
+     "moving": true,
      "sampleU": 1,
+     "sampleV": 0,
      "blur": 0,
      "shade": 1
     }
@@ -60,6 +73,7 @@
    "frame": {
     "motion": 0.074074,
     "stretch": 0.965926,
+    "lift": 0.258819,
     "opacity": 1,
     "maxBlur": 0.051502
    },
@@ -67,44 +81,56 @@
     {
      "u": 0,
      "g": 0,
+     "moving": true,
      "sampleU": 0,
+     "sampleV": 0,
      "blur": 0,
      "shade": 1
     },
     {
      "u": 0.1,
      "g": 0.1,
-     "sampleU": 0.096593,
-     "blur": 0.00017,
-     "shade": 1
+     "moving": true,
+     "sampleU": 0.097264,
+     "sampleV": -0.003475,
+     "blur": 0.000004,
+     "shade": 0.999444
     },
     {
      "u": 0.25,
      "g": 0.25,
-     "sampleU": 0.241481,
-     "blur": 0.000587,
-     "shade": 0.996491
+     "moving": true,
+     "sampleU": 0.245721,
+     "sampleV": -0.008779,
+     "blur": 0.00006,
+     "shade": 0.996528
     },
     {
      "u": 0.5,
      "g": 0.5,
-     "sampleU": 0.482963,
-     "blur": 0.001497,
-     "shade": 0.960587
+     "moving": true,
+     "sampleU": 0.500225,
+     "sampleV": -0.017871,
+     "blur": 0.000477,
+     "shade": 0.986111
     },
     {
      "u": 0.75,
      "g": 0.75,
-     "sampleU": 0.724444,
-     "blur": 0.002587,
-     "shade": 0.910666
+     "moving": true,
+     "sampleU": 0.763991,
+     "sampleV": -0.027295,
+     "blur": 0.001609,
+     "shade": 0.96875
     },
     {
      "u": 1,
      "g": 1,
-     "sampleU": 0.965926,
+     "moving": true,
+     "sampleU": 1.037535,
+     "sampleV": -0.037068,
      "blur": 0.003815,
-     "shade": 0.851852
+     "shade": 0.944444
     }
    ]
   },
@@ -114,6 +140,7 @@
    "frame": {
     "motion": 0.5,
     "stretch": 0.707107,
+    "lift": 0.707107,
     "opacity": 1,
     "maxBlur": 0.051502
    },
@@ -121,44 +148,56 @@
     {
      "u": 0,
      "g": 0,
+     "moving": true,
      "sampleU": 0,
+     "sampleV": 0,
      "blur": 0,
      "shade": 1
     },
     {
      "u": 0.1,
      "g": 0.1,
-     "sampleU": 0.070711,
-     "blur": 0.00115,
-     "shade": 1
+     "moving": true,
+     "sampleU": 0.07207,
+     "sampleV": -0.009609,
+     "blur": 0.000026,
+     "shade": 0.99625
     },
     {
      "u": 0.25,
      "g": 0.25,
-     "sampleU": 0.176777,
-     "blur": 0.003963,
-     "shade": 0.976317
+     "moving": true,
+     "sampleU": 0.185522,
+     "sampleV": -0.024736,
+     "blur": 0.000402,
+     "shade": 0.976563
     },
     {
      "u": 0.5,
      "g": 0.5,
-     "sampleU": 0.353553,
-     "blur": 0.010102,
-     "shade": 0.733963
+     "moving": true,
+     "sampleU": 0.390357,
+     "sampleV": -0.052048,
+     "blur": 0.003219,
+     "shade": 0.90625
     },
     {
      "u": 0.75,
      "g": 0.75,
-     "sampleU": 0.53033,
-     "blur": 0.017463,
-     "shade": 0.396999
+     "moving": true,
+     "sampleU": 0.617684,
+     "sampleV": -0.082358,
+     "blur": 0.010864,
+     "shade": 0.789063
     },
     {
      "u": 1,
      "g": 1,
-     "sampleU": 0.707107,
+     "moving": true,
+     "sampleU": 0.871424,
+     "sampleV": -0.11619,
      "blur": 0.025751,
-     "shade": 0
+     "shade": 0.625
     }
    ]
   },
@@ -168,6 +207,7 @@
    "frame": {
     "motion": 1,
     "stretch": 0.2,
+    "lift": 1,
     "opacity": 1,
     "maxBlur": 0.051502
    },
@@ -175,44 +215,56 @@
     {
      "u": 0,
      "g": 0,
+     "moving": true,
      "sampleU": 0,
+     "sampleV": 0,
      "blur": 0,
      "shade": 1
     },
     {
      "u": 0.1,
      "g": 0.1,
-     "sampleU": 0.02,
-     "blur": 0.002301,
-     "shade": 1
+     "moving": true,
+     "sampleU": 0.020548,
+     "sampleV": -0.013699,
+     "blur": 0.000052,
+     "shade": 0.9925
     },
     {
      "u": 0.25,
      "g": 0.25,
-     "sampleU": 0.05,
-     "blur": 0.007926,
-     "shade": 0.952634
+     "moving": true,
+     "sampleU": 0.053571,
+     "sampleV": -0.035714,
+     "blur": 0.000805,
+     "shade": 0.953125
     },
     {
      "u": 0.5,
      "g": 0.5,
-     "sampleU": 0.1,
-     "blur": 0.020204,
-     "shade": 0.467926
+     "moving": true,
+     "sampleU": 0.115385,
+     "sampleV": -0.076923,
+     "blur": 0.006438,
+     "shade": 0.8125
     },
     {
      "u": 0.75,
      "g": 0.75,
-     "sampleU": 0.15,
-     "blur": 0.034927,
-     "shade": 0
+     "moving": true,
+     "sampleU": 0.1875,
+     "sampleV": -0.125,
+     "blur": 0.021727,
+     "shade": 0.578125
     },
     {
      "u": 1,
      "g": 1,
-     "sampleU": 0.2,
+     "moving": true,
+     "sampleU": 0.272727,
+     "sampleV": -0.181818,
      "blur": 0.051502,
-     "shade": 0
+     "shade": 0.25
     }
    ]
   },
@@ -222,6 +274,7 @@
    "frame": {
     "motion": 1,
     "stretch": 0.2,
+    "lift": 0.866025,
     "opacity": 1,
     "maxBlur": 0.051502
    },
@@ -229,44 +282,56 @@
     {
      "u": 0,
      "g": 0,
+     "moving": true,
      "sampleU": 0,
+     "sampleV": 0,
      "blur": 0,
      "shade": 1
     },
     {
      "u": 0.1,
      "g": 0.1,
-     "sampleU": 0.02,
-     "blur": 0.002301,
-     "shade": 1
+     "moving": true,
+     "sampleU": 0.020473,
+     "sampleV": -0.01182,
+     "blur": 0.000052,
+     "shade": 0.9925
     },
     {
      "u": 0.25,
      "g": 0.25,
-     "sampleU": 0.05,
-     "blur": 0.007926,
-     "shade": 0.952634
+     "moving": true,
+     "sampleU": 0.053064,
+     "sampleV": -0.030636,
+     "blur": 0.000805,
+     "shade": 0.953125
     },
     {
      "u": 0.5,
      "g": 0.5,
-     "sampleU": 0.1,
-     "blur": 0.020204,
-     "shade": 0.467926
+     "moving": true,
+     "sampleU": 0.113054,
+     "sampleV": -0.065272,
+     "blur": 0.006438,
+     "shade": 0.8125
     },
     {
      "u": 0.75,
      "g": 0.75,
-     "sampleU": 0.15,
-     "blur": 0.034927,
-     "shade": 0
+     "moving": true,
+     "sampleU": 0.181423,
+     "sampleV": -0.104745,
+     "blur": 0.021727,
+     "shade": 0.578125
     },
     {
      "u": 1,
      "g": 1,
-     "sampleU": 0.2,
+     "moving": true,
+     "sampleU": 0.260058,
+     "sampleV": -0.150144,
      "blur": 0.051502,
-     "shade": 0
+     "shade": 0.25
     }
    ]
   },
@@ -276,6 +341,7 @@
    "frame": {
     "motion": 1,
     "stretch": 0.2,
+    "lift": 0.5,
     "opacity": 0.432006,
     "maxBlur": 0.051502
    },
@@ -283,44 +349,56 @@
     {
      "u": 0,
      "g": 0,
+     "moving": true,
      "sampleU": 0,
+     "sampleV": 0,
      "blur": 0,
      "shade": 0.432006
     },
     {
      "u": 0.1,
      "g": 0.1,
-     "sampleU": 0.02,
-     "blur": 0.002301,
-     "shade": 0.432006
+     "moving": true,
+     "sampleU": 0.02027,
+     "sampleV": -0.006757,
+     "blur": 0.000052,
+     "shade": 0.428766
     },
     {
      "u": 0.25,
      "g": 0.25,
-     "sampleU": 0.05,
-     "blur": 0.007926,
-     "shade": 0.411544
+     "moving": true,
+     "sampleU": 0.051724,
+     "sampleV": -0.017241,
+     "blur": 0.000805,
+     "shade": 0.411756
     },
     {
      "u": 0.5,
      "g": 0.5,
-     "sampleU": 0.1,
-     "blur": 0.020204,
-     "shade": 0.202147
+     "moving": true,
+     "sampleU": 0.107143,
+     "sampleV": -0.035714,
+     "blur": 0.006438,
+     "shade": 0.351005
     },
     {
      "u": 0.75,
      "g": 0.75,
-     "sampleU": 0.15,
-     "blur": 0.034927,
-     "shade": 0
+     "moving": true,
+     "sampleU": 0.166667,
+     "sampleV": -0.055556,
+     "blur": 0.021727,
+     "shade": 0.249753
     },
     {
      "u": 1,
      "g": 1,
-     "sampleU": 0.2,
+     "moving": true,
+     "sampleU": 0.230769,
+     "sampleV": -0.076923,
      "blur": 0.051502,
-     "shade": 0
+     "shade": 0.108002
     }
    ]
   },
@@ -330,6 +408,7 @@
    "frame": {
     "motion": 1,
     "stretch": 0.2,
+    "lift": 0.087156,
     "opacity": 0,
     "maxBlur": 0.051502
    },
@@ -337,42 +416,54 @@
     {
      "u": 0,
      "g": 0,
+     "moving": true,
      "sampleU": 0,
+     "sampleV": 0,
      "blur": 0,
      "shade": 0
     },
     {
      "u": 0.1,
      "g": 0.1,
-     "sampleU": 0.02,
-     "blur": 0.002301,
+     "moving": true,
+     "sampleU": 0.020047,
+     "sampleV": -0.001165,
+     "blur": 0.000052,
      "shade": 0
     },
     {
      "u": 0.25,
      "g": 0.25,
-     "sampleU": 0.05,
-     "blur": 0.007926,
+     "moving": true,
+     "sampleU": 0.050292,
+     "sampleV": -0.002922,
+     "blur": 0.000805,
      "shade": 0
     },
     {
      "u": 0.5,
      "g": 0.5,
-     "sampleU": 0.1,
-     "blur": 0.020204,
+     "moving": true,
+     "sampleU": 0.101176,
+     "sampleV": -0.005879,
+     "blur": 0.006438,
      "shade": 0
     },
     {
      "u": 0.75,
      "g": 0.75,
-     "sampleU": 0.15,
-     "blur": 0.034927,
+     "moving": true,
+     "sampleU": 0.152661,
+     "sampleV": -0.00887,
+     "blur": 0.021727,
      "shade": 0
     },
     {
      "u": 1,
      "g": 1,
-     "sampleU": 0.2,
+     "moving": true,
+     "sampleU": 0.204759,
+     "sampleV": -0.011897,
      "blur": 0.051502,
      "shade": 0
     }
@@ -384,6 +475,7 @@
    "frame": {
     "motion": 1,
     "stretch": 0.2,
+    "lift": 0,
     "opacity": 0,
     "maxBlur": 0.051502
    },
@@ -391,42 +483,54 @@
     {
      "u": 0,
      "g": 0,
+     "moving": true,
      "sampleU": 0,
+     "sampleV": 0,
      "blur": 0,
      "shade": 0
     },
     {
      "u": 0.1,
      "g": 0.1,
+     "moving": true,
      "sampleU": 0.02,
-     "blur": 0.002301,
+     "sampleV": 0,
+     "blur": 0.000052,
      "shade": 0
     },
     {
      "u": 0.25,
      "g": 0.25,
+     "moving": true,
      "sampleU": 0.05,
-     "blur": 0.007926,
+     "sampleV": 0,
+     "blur": 0.000805,
      "shade": 0
     },
     {
      "u": 0.5,
      "g": 0.5,
+     "moving": true,
      "sampleU": 0.1,
-     "blur": 0.020204,
+     "sampleV": 0,
+     "blur": 0.006438,
      "shade": 0
     },
     {
      "u": 0.75,
      "g": 0.75,
+     "moving": true,
      "sampleU": 0.15,
-     "blur": 0.034927,
+     "sampleV": 0,
+     "blur": 0.021727,
      "shade": 0
     },
     {
      "u": 1,
      "g": 1,
+     "moving": true,
      "sampleU": 0.2,
+     "sampleV": 0,
      "blur": 0.051502,
      "shade": 0
     }
@@ -438,6 +542,7 @@
    "frame": {
     "motion": 1,
     "stretch": 0.2,
+    "lift": 0,
     "opacity": 0,
     "maxBlur": 0.026966
    },
@@ -445,43 +550,55 @@
     {
      "u": 0,
      "g": 1,
+     "moving": true,
      "sampleU": 0.4,
+     "sampleV": 0,
      "blur": 0.026966,
      "shade": 0
     },
     {
      "u": 0.1,
      "g": 0.8,
+     "moving": true,
      "sampleU": 0.42,
-     "blur": 0.019952,
+     "sampleV": 0,
+     "blur": 0.013807,
      "shade": 0
     },
     {
      "u": 0.25,
      "g": 0.5,
+     "moving": true,
      "sampleU": 0.45,
-     "blur": 0.010579,
+     "sampleV": 0,
+     "blur": 0.003371,
      "shade": 0
     },
     {
      "u": 0.5,
      "g": 0,
+     "moving": false,
      "sampleU": 0.5,
+     "sampleV": 0,
      "blur": 0,
      "shade": 0
     },
     {
      "u": 0.75,
      "g": 0.5,
+     "moving": false,
      "sampleU": 0.75,
-     "blur": 0.010579,
+     "sampleV": 0,
+     "blur": 0.001348,
      "shade": 0
     },
     {
      "u": 1,
      "g": 1,
+     "moving": false,
      "sampleU": 1,
-     "blur": 0.026966,
+     "sampleV": 0,
+     "blur": 0.010787,
      "shade": 0
     }
    ]
@@ -492,6 +609,7 @@
    "frame": {
     "motion": 1,
     "stretch": 0.2,
+    "lift": 0.258819,
     "opacity": 0.087153,
     "maxBlur": 0.026966
    },
@@ -499,44 +617,56 @@
     {
      "u": 0,
      "g": 1,
-     "sampleU": 0.4,
+     "moving": true,
+     "sampleU": 0.392586,
+     "sampleV": -0.037068,
      "blur": 0.026966,
-     "shade": 0
+     "shade": 0.021788
     },
     {
      "u": 0.1,
      "g": 0.8,
-     "sampleU": 0.42,
-     "blur": 0.019952,
-     "shade": 0
+     "moving": true,
+     "sampleU": 0.415325,
+     "sampleV": -0.029221,
+     "blur": 0.013807,
+     "shade": 0.045319
     },
     {
      "u": 0.25,
      "g": 0.5,
-     "sampleU": 0.45,
-     "blur": 0.010579,
-     "shade": 0.040781
+     "moving": true,
+     "sampleU": 0.448213,
+     "sampleV": -0.017871,
+     "blur": 0.003371,
+     "shade": 0.070811
     },
     {
      "u": 0.5,
      "g": 0,
+     "moving": false,
      "sampleU": 0.5,
+     "sampleV": 0,
      "blur": 0,
-     "shade": 0.087153
+     "shade": 0.065364
     },
     {
      "u": 0.75,
      "g": 0.5,
+     "moving": false,
      "sampleU": 0.75,
-     "blur": 0.010579,
-     "shade": 0.040781
+     "sampleV": 0,
+     "blur": 0.001348,
+     "shade": 0.065364
     },
     {
      "u": 1,
      "g": 1,
+     "moving": false,
      "sampleU": 1,
-     "blur": 0.026966,
-     "shade": 0
+     "sampleV": 0,
+     "blur": 0.010787,
+     "shade": 0.065364
     }
    ]
   },
@@ -546,6 +676,7 @@
    "frame": {
     "motion": 1,
     "stretch": 0.2,
+    "lift": 0.707107,
     "opacity": 0.817431,
     "maxBlur": 0.026966
    },
@@ -553,44 +684,56 @@
     {
      "u": 0,
      "g": 1,
-     "sampleU": 0.4,
+     "moving": true,
+     "sampleU": 0.376762,
+     "sampleV": -0.11619,
      "blur": 0.026966,
-     "shade": 0
+     "shade": 0.204358
     },
     {
      "u": 0.1,
      "g": 0.8,
-     "sampleU": 0.42,
-     "blur": 0.019952,
-     "shade": 0
+     "moving": true,
+     "sampleU": 0.405788,
+     "sampleV": -0.088824,
+     "blur": 0.013807,
+     "shade": 0.425064
     },
     {
      "u": 0.25,
      "g": 0.5,
-     "sampleU": 0.45,
-     "blur": 0.010579,
-     "shade": 0.382497
+     "moving": true,
+     "sampleU": 0.444795,
+     "sampleV": -0.052048,
+     "blur": 0.003371,
+     "shade": 0.664162
     },
     {
      "u": 0.5,
      "g": 0,
+     "moving": false,
      "sampleU": 0.5,
+     "sampleV": 0,
      "blur": 0,
-     "shade": 0.817431
+     "shade": 0.613073
     },
     {
      "u": 0.75,
      "g": 0.5,
+     "moving": false,
      "sampleU": 0.75,
-     "blur": 0.010579,
-     "shade": 0.382497
+     "sampleV": 0,
+     "blur": 0.001348,
+     "shade": 0.613073
     },
     {
      "u": 1,
      "g": 1,
+     "moving": false,
      "sampleU": 1,
-     "blur": 0.026966,
-     "shade": 0
+     "sampleV": 0,
+     "blur": 0.010787,
+     "shade": 0.613073
     }
    ]
   },
@@ -600,6 +743,7 @@
    "frame": {
     "motion": 1,
     "stretch": 0.2,
+    "lift": 1,
     "opacity": 1,
     "maxBlur": 0.026966
    },
@@ -607,44 +751,56 @@
     {
      "u": 0,
      "g": 1,
-     "sampleU": 0.4,
+     "moving": true,
+     "sampleU": 0.363636,
+     "sampleV": -0.181818,
      "blur": 0.026966,
-     "shade": 0
+     "shade": 0.25
     },
     {
      "u": 0.1,
      "g": 0.8,
-     "sampleU": 0.42,
-     "blur": 0.019952,
-     "shade": 0
+     "moving": true,
+     "sampleU": 0.398305,
+     "sampleV": -0.135593,
+     "blur": 0.013807,
+     "shade": 0.52
     },
     {
      "u": 0.25,
      "g": 0.5,
-     "sampleU": 0.45,
-     "blur": 0.010579,
-     "shade": 0.467926
+     "moving": true,
+     "sampleU": 0.442308,
+     "sampleV": -0.076923,
+     "blur": 0.003371,
+     "shade": 0.8125
     },
     {
      "u": 0.5,
      "g": 0,
+     "moving": false,
      "sampleU": 0.5,
+     "sampleV": 0,
      "blur": 0,
-     "shade": 1
+     "shade": 0.75
     },
     {
      "u": 0.75,
      "g": 0.5,
+     "moving": false,
      "sampleU": 0.75,
-     "blur": 0.010579,
-     "shade": 0.467926
+     "sampleV": 0,
+     "blur": 0.001348,
+     "shade": 0.75
     },
     {
      "u": 1,
      "g": 1,
+     "moving": false,
      "sampleU": 1,
-     "blur": 0.026966,
-     "shade": 0
+     "sampleV": 0,
+     "blur": 0.010787,
+     "shade": 0.75
     }
    ]
   },
@@ -654,6 +810,7 @@
    "frame": {
     "motion": 0.740741,
     "stretch": 0.5,
+    "lift": 0.866025,
     "opacity": 1,
     "maxBlur": 0.026966
    },
@@ -661,44 +818,56 @@
     {
      "u": 0,
      "g": 1,
-     "sampleU": 0.25,
+     "moving": true,
+     "sampleU": 0.174928,
+     "sampleV": -0.150144,
      "blur": 0.019975,
-     "shade": 0
+     "shade": 0.444444
     },
     {
      "u": 0.1,
      "g": 0.8,
-     "sampleU": 0.3,
-     "blur": 0.014779,
-     "shade": 0
+     "moving": true,
+     "sampleU": 0.254676,
+     "sampleV": -0.11331,
+     "blur": 0.010227,
+     "shade": 0.644444
     },
     {
      "u": 0.25,
      "g": 0.5,
-     "sampleU": 0.375,
-     "blur": 0.007836,
-     "shade": 0.605871
+     "moving": true,
+     "sampleU": 0.358682,
+     "sampleV": -0.065272,
+     "blur": 0.002497,
+     "shade": 0.861111
     },
     {
      "u": 0.5,
      "g": 0,
+     "moving": false,
      "sampleU": 0.5,
+     "sampleV": 0,
      "blur": 0,
-     "shade": 1
+     "shade": 0.814815
     },
     {
      "u": 0.75,
      "g": 0.5,
+     "moving": false,
      "sampleU": 0.75,
-     "blur": 0.007836,
-     "shade": 0.605871
+     "sampleV": 0,
+     "blur": 0.000999,
+     "shade": 0.814815
     },
     {
      "u": 1,
      "g": 1,
+     "moving": false,
      "sampleU": 1,
-     "blur": 0.019975,
-     "shade": 0
+     "sampleV": 0,
+     "blur": 0.00799,
+     "shade": 0.814815
     }
    ]
   },
@@ -708,6 +877,7 @@
    "frame": {
     "motion": 0.259259,
     "stretch": 0.866025,
+    "lift": 0.5,
     "opacity": 1,
     "maxBlur": 0.026966
    },
@@ -715,44 +885,56 @@
     {
      "u": 0,
      "g": 1,
-     "sampleU": 0.066987,
+     "moving": true,
+     "sampleU": 0.00037,
+     "sampleV": -0.076923,
      "blur": 0.006991,
-     "shade": 0.481481
+     "shade": 0.805556
     },
     {
      "u": 0.1,
      "g": 0.8,
-     "sampleU": 0.15359,
-     "blur": 0.005173,
-     "shade": 0.648361
+     "moving": true,
+     "sampleU": 0.112227,
+     "sampleV": -0.059701,
+     "blur": 0.00358,
+     "shade": 0.875556
     },
     {
      "u": 0.25,
      "g": 0.5,
-     "sampleU": 0.283494,
-     "blur": 0.002743,
-     "shade": 0.862055
+     "moving": true,
+     "sampleU": 0.268029,
+     "sampleV": -0.035714,
+     "blur": 0.000874,
+     "shade": 0.951389
     },
     {
      "u": 0.5,
      "g": 0,
+     "moving": false,
      "sampleU": 0.5,
+     "sampleV": 0,
      "blur": 0,
-     "shade": 1
+     "shade": 0.935185
     },
     {
      "u": 0.75,
      "g": 0.5,
+     "moving": false,
      "sampleU": 0.75,
-     "blur": 0.002743,
-     "shade": 0.862055
+     "sampleV": 0,
+     "blur": 0.00035,
+     "shade": 0.935185
     },
     {
      "u": 1,
      "g": 1,
+     "moving": false,
      "sampleU": 1,
-     "blur": 0.006991,
-     "shade": 0.481481
+     "sampleV": 0,
+     "blur": 0.002797,
+     "shade": 0.935185
     }
    ]
   },
@@ -762,6 +944,7 @@
    "frame": {
     "motion": 0.008916,
     "stretch": 0.996195,
+    "lift": 0.087156,
     "opacity": 1,
     "maxBlur": 0.026966
    },
@@ -769,44 +952,56 @@
     {
      "u": 0,
      "g": 1,
-     "sampleU": 0.001903,
+     "moving": true,
+     "sampleU": -0.009949,
+     "sampleV": -0.011897,
      "blur": 0.00024,
-     "shade": 0.982167
+     "shade": 0.993313
     },
     {
      "u": 0.1,
      "g": 0.8,
-     "sampleU": 0.101522,
-     "blur": 0.000178,
-     "shade": 0.987907
+     "moving": true,
+     "sampleU": 0.093973,
+     "sampleV": -0.009473,
+     "blur": 0.000123,
+     "shade": 0.99572
     },
     {
      "u": 0.25,
      "g": 0.5,
-     "sampleU": 0.250951,
-     "blur": 0.000094,
-     "shade": 0.995256
+     "moving": true,
+     "sampleU": 0.248023,
+     "sampleV": -0.005879,
+     "blur": 0.00003,
+     "shade": 0.998328
     },
     {
      "u": 0.5,
      "g": 0,
+     "moving": false,
      "sampleU": 0.5,
+     "sampleV": 0,
      "blur": 0,
-     "shade": 1
+     "shade": 0.997771
     },
     {
      "u": 0.75,
      "g": 0.5,
+     "moving": false,
      "sampleU": 0.75,
-     "blur": 0.000094,
-     "shade": 0.995256
+     "sampleV": 0,
+     "blur": 0.000012,
+     "shade": 0.997771
     },
     {
      "u": 1,
      "g": 1,
+     "moving": false,
      "sampleU": 1,
-     "blur": 0.00024,
-     "shade": 0.982167
+     "sampleV": 0,
+     "blur": 0.000096,
+     "shade": 0.997771
     }
    ]
   },
@@ -816,6 +1011,7 @@
    "frame": {
     "motion": 0,
     "stretch": 1,
+    "lift": 0,
     "opacity": 1,
     "maxBlur": 0.026966
    },
@@ -823,42 +1019,54 @@
     {
      "u": 0,
      "g": 1,
+     "moving": true,
      "sampleU": 0,
+     "sampleV": 0,
      "blur": 0,
      "shade": 1
     },
     {
      "u": 0.1,
      "g": 0.8,
+     "moving": true,
      "sampleU": 0.1,
+     "sampleV": 0,
      "blur": 0,
      "shade": 1
     },
     {
      "u": 0.25,
      "g": 0.5,
+     "moving": true,
      "sampleU": 0.25,
+     "sampleV": 0,
      "blur": 0,
      "shade": 1
     },
     {
      "u": 0.5,
      "g": 0,
+     "moving": false,
      "sampleU": 0.5,
+     "sampleV": 0,
      "blur": 0,
      "shade": 1
     },
     {
      "u": 0.75,
      "g": 0.5,
+     "moving": false,
      "sampleU": 0.75,
+     "sampleV": 0,
      "blur": 0,
      "shade": 1
     },
     {
      "u": 1,
      "g": 1,
+     "moving": false,
      "sampleU": 1,
+     "sampleV": 0,
      "blur": 0,
      "shade": 1
     }

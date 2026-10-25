@@ -1,5 +1,5 @@
 import { UnfoldRenderer, classify, playUnfold, type DuoInput, type DuoState, type Playback } from '../src'
-import { loadIcons, paintHome } from './ios'
+import { loadIcons, paintHome, sharedWallpaper } from './ios'
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T
 
@@ -29,8 +29,9 @@ let angle = 0
 let playback: Playback | null = null
 
 function loadContent() {
-  coverGL.setSource(paintHome(COVER, wallpaper))
-  innerGL.setSource(paintHome(INNER, wallpaper))
+  const wall = sharedWallpaper(INNER, wallpaper)
+  coverGL.setSource(paintHome(COVER, wall))
+  innerGL.setSource(paintHome(INNER, wall))
   draw(angle)
 }
 
@@ -55,8 +56,8 @@ function draw(a: number) {
   // Lighting: each face darkens as it turns away from the viewer, and the
   // fixed half falls into the moving half's shadow near the hinge.
   const rad = (d: number) => (d * Math.PI) / 180
-  phone.style.setProperty('--lit-front', String(((1 - Math.cos(rad(180 - a))) / 2) * 0.55))
-  phone.style.setProperty('--lit-back', String(((1 - Math.cos(rad(a))) / 2) * 0.55))
+  phone.style.setProperty('--lit-front', String(((1 - Math.cos(rad(180 - a))) / 2) * 0.3))
+  phone.style.setProperty('--lit-back', String(((1 - Math.cos(rad(a))) / 2) * 0.3))
   phone.style.setProperty('--occlude', String(Math.max(0, 1 - a / 150) ** 2 * 0.6))
   blit(faces.cover, coverGL.canvas, 0, 1)
   blit(faces.left, innerGL.canvas, 0, 0.5)

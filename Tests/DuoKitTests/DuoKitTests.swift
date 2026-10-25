@@ -3,8 +3,11 @@ import XCTest
 
 private struct Fixtures: Decodable {
     struct Frame: Decodable {
-        struct Values: Decodable { let motion, stretch, opacity, maxBlur: Double }
-        struct Pixel: Decodable { let u, g, sampleU, blur, shade: Double }
+        struct Values: Decodable { let motion, stretch, lift, opacity, maxBlur: Double }
+        struct Pixel: Decodable {
+            let u, g, sampleU, sampleV, blur, shade: Double
+            let moving: Bool
+        }
         let role: String
         let angle: Double
         let frame: Values
@@ -28,14 +31,17 @@ final class UnfoldModelTests: XCTestCase {
             let f = Unfold.frame(angle: item.angle, role: role)
             XCTAssertEqual(f.motion, item.frame.motion, accuracy: eps)
             XCTAssertEqual(f.stretch, item.frame.stretch, accuracy: eps)
+            XCTAssertEqual(f.lift, item.frame.lift, accuracy: eps)
             XCTAssertEqual(f.opacity, item.frame.opacity, accuracy: eps)
             XCTAssertEqual(f.maxBlur, item.frame.maxBlur, accuracy: eps)
             for p in item.pixels {
                 let g = Unfold.hingeDistance(p.u, role: role)
                 XCTAssertEqual(g, p.g, accuracy: eps)
+                XCTAssertEqual(Unfold.isMoving(p.u, role: role), p.moving)
                 XCTAssertEqual(Unfold.sampleU(p.u, role: role, frame: f), p.sampleU, accuracy: eps)
-                XCTAssertEqual(Unfold.blur(at: g, frame: f), p.blur, accuracy: eps)
-                XCTAssertEqual(Unfold.shade(at: g, frame: f), p.shade, accuracy: eps)
+                XCTAssertEqual(Unfold.sampleV(p.u, 0, role: role, frame: f), p.sampleV, accuracy: eps)
+                XCTAssertEqual(Unfold.blur(at: g, frame: f, moving: p.moving), p.blur, accuracy: eps)
+                XCTAssertEqual(Unfold.shade(at: g, frame: f, moving: p.moving), p.shade, accuracy: eps)
             }
         }
         for e in fx.ease {
