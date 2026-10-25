@@ -4,52 +4,63 @@ Apple hasn't documented the transition, and its implementation is closed. This f
 
 ## What people see
 
-From launch coverage and reviews:
+From launch coverage, reviews, and two frame-by-frame reconstructions of the launch footage:
 
-- When the phone opens, the cover screen's content *loses definition like frosted glass*. The inner screen's content arrives with the same blur, the two merge, and then it sharpens. Reviewers describe a *blur and stretch* between the screens.
-- Icons and wallpaper *appear to hold their position in space* while the panel they are drawn on rotates. That's what sells the illusion that content passes through the moving screen.
+- When the phone opens, the cover screen's content *loses definition like frosted glass*. The inner screen's content arrives with the same blur, the two merge, and then it sharpens. Reviewers describe *opening and closing a transparent piece of glass*.
+- Content *holds its position in space* while the panel it is drawn on rotates, even though the panel visibly grows as its free edge swings toward you. Both screens behave as windows onto one picture behind the phone.
+- The blur is **sharp at the hinge and strongest at the moving edge**, and the bezel stays crisp. The half resting in your hand barely changes: it dims a little and brightens as the phone flattens.
 - The motion follows your hand. It's driven by the hinge angle, not a timer.
-- Known glitch: the illusion only holds head-on. Each screen is a flat 2D composite, so at an angle you can see the trick.
+- Known glitch: the illusion only holds head-on. Each screen is a flat 2D composite, so at an angle you can see the trick (try the demo's three-quarter view).
 
 ## The model
 
-The hinge angle `θ` runs from 0° (closed) to 180° (flat). Each screen gets four numbers per frame, then two per-pixel terms.
+The hinge angle `θ` runs from 0° (closed) to 180° (flat). Each screen gets five numbers per frame, then a few per-pixel terms. `tilt` is how far the moving panel is from facing the viewer: `θ` for the cover, `180° − θ` for the inner screen.
 
 ### Per frame
 
 | | cover | inner |
 |---|---|---|
-| `motion` (blur/shade strength) | `smoothstep(0°, 90°, θ)` | `smoothstep(0°, 90°, 180° − θ)` |
-| `stretch` (panel compression) | `max(cos θ, 0.2)` | `max(cos(180° − θ), 0.2)` on the moving half only |
+| `motion` (blur/shade strength) | `smoothstep(0°, 90°, tilt)` | same |
+| `stretch` | `max(cos tilt, 0.2)` | same, applied to the moving half only |
+| `lift` | `sin tilt` | same |
 | `opacity` | `1 − smoothstep(120°, 175°, θ)` | `smoothstep(5°, 60°, θ)` |
 | `maxBlur` (fraction of width) | `72 / 1398` | `72 / 2670` |
 
-The hand-off happens at **90°**, where both screens are fully in transit (`motion = 1`). Below 90° you're mostly looking at the cover. Above it, the inner screen resolves.
+The hand-off happens at **90°**, where both screens are fully in transit (`motion = 1`).
 
 ### Per pixel
 
-`g` is the distance from the hinge, normalised: 0 at the fold, 1 at the far edge. On the cover the hinge is one edge; on the inner screen it's the centre line.
+`g` is the distance from the hinge, normalised: 0 at the fold, 1 at the far edge. On the cover the hinge is one edge; on the inner screen it's the centre line. *Moving* pixels are the whole cover and the half of the inner screen that swings.
 
 ```
-blurRadius = maxBlur · motion · g^1.35            (× screen width)
-shade      = (1 − min(1, 2 · motion · d^1.35)) · opacity,   d = clamp((g − 0.2) / 0.8)
+moving:   blur  = maxBlur · motion · g³                 (× screen width)
+          shade = (1 − 0.75 · motion · g²) · opacity
+resting:  blur  = 0.4 · maxBlur · motion · g³
+          shade = (1 − 0.25 · motion) · opacity
 ```
 
-This makes the blur **progressive**: pixels at the hinge stay sharp, and those at the far edge are the softest and darkest. On the inner screen, content therefore appears to grow outward from the fold.
+The cubic falloff comes from a frame-matched reconstruction: at half the distance to the free edge the blur is an eighth of the edge value (6 px against 48 px). The moving panel darkens toward its free edge but never goes black. The resting half stays nearly sharp and only dims evenly.
 
 ### Holding content still
 
-The trick that makes icons look like they don't move is the `stretch` term. The cover rotates by θ around the hinge, so seen from the front its width projects to `w · cos θ`. For the content to look stationary, the panel must show only the slice of the scene it still covers. That means sampling `u · cos θ` and drawing it across the full panel:
+Every moving pixel samples where the eye's ray through it meets the plane of the open screen. With the eye `D = 3.75` panel widths away (about 30 cm from an 8 cm panel), a point `g` from the hinge sits `g · lift` closer to the eye, so its ray reaches further across that plane:
 
 ```
-cover:  sample(u) = u · stretch                          (anchored at the hinge edge)
-inner:  sample(u) = 0.5 − (0.5 − u) · stretch   for u < 0.5 (the half that moves)
-        sample(u) = u                           otherwise (the half in your palm)
+k(g)  = D / (D − g · lift)
+reach = g · stretch · k(g)
+
+cover:  sample(u) = reach                         (anchored at the hinge edge)
+inner:  sample(u) = 0.5 − reach / 2   on the moving half,   u   on the resting half
+        sample(v) = 0.5 + (v − 0.5) · k(g)        on moving pixels
 ```
 
-On the panel the content looks stretched away from the hinge. In 3D, foreshortening cancels that out and the content holds still. You can check this in the demo with the three-quarter view off. At 140°, the clock and the icon rows line up across the crease even though the left half is tilted.
+On the panel the content looks squeezed toward the hinge and, near the free edge, shrunk vertically. Seen in perspective, foreshortening cancels both, and the content holds still while the panel grows toward you. With `D → ∞` this reduces to the older orthographic `u · cos θ`. The demo uses the same `D` for its CSS perspective, so the effect lines up there too.
 
-`stretch` is clamped at 0.2. Past 90° of tilt the panel faces away from you and is shaded to black anyway, and the clamp keeps the sampling from collapsing to a single column.
+`stretch` is clamped at 0.2. Past 90° of tilt the panel faces away from you anyway, and the clamp keeps the sampling from collapsing to a single column.
+
+### One picture behind both screens
+
+Both screens should show the same picture where they overlap in space. In the demo, the cover's wallpaper is the half of the inner wallpaper it lies over when closed, so the background lines up through the hand-off and only the icons cross-dissolve inside the blur. In an app, give both screens content that agrees at the hinge.
 
 ### Timing (when there is no hinge stream)
 
@@ -65,11 +76,12 @@ Closing plays it in reverse on the cover screen.
 
 | Constant | Source |
 |---|---|
-| 90° hand-off, smoothstep ramps, `g^1.35` falloff, 72px max blur, shade beyond `g = 0.2` | The open Three.js study [chuspeeism/iphone-duo](https://github.com/chuspeeism/iphone-duo), which matches the launch footage closely. |
-| `cos θ` stretch | Derived above from the "content holds still" observation. |
-| Fade windows (120–175°, 5–60°) | Tuned by eye against footage. The cover goes dark before it faces away, and the inner screen wakes as soon as the hinge cracks. |
-| Cosine ease | Same study. Also the natural motion of a damped hinge. |
-| Screen sizes (cover 1398×2034, inner 2670×1878, ~1.4:1) | Apple's published specs and launch coverage. |
+| Sharp hinge, cubic blur toward the moving edge (6 px halfway vs 48 px at the edge), crisp bezel, darker free edge, endpoints sharp and bright, one shared picture, a perspective camera in which the moving panel grows | Empirical Health's frame-matched reconstruction of the launch clip: [Why the iPhone Duo fold animation works so well](https://www.empirical.health/blog/why-iphone-duo-fold-animation-works/) |
+| 90° hand-off, smoothstep ramps, 72px max blur, cosine ease | The open Three.js study [chuspeeism/iphone-duo](https://github.com/chuspeeism/iphone-duo) |
+| `D = 3.75` panel widths, `0.75` edge darkening, `0.4` resting-half blur, `0.25` resting-half dim | Tuned by eye against the above. A typical viewing distance is ~30 cm and the panel is ~8 cm wide. |
+| `cos`/`sin` sampling | Derived above from the "content holds still" observation. |
+| Fade windows (120–175°, 5–60°) | Tuned by eye against footage. |
+| Screen sizes (cover 1398×2034, inner 2670×1878, ~1.4:1) | Apple's published specs. |
 
 ## Implementations
 

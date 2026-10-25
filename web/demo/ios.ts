@@ -455,14 +455,38 @@ export interface HomeSpec {
   h: number
 }
 
-export function paintHome(spec: HomeSpec, img: HTMLImageElement | null): HTMLCanvasElement {
+/**
+ * One wallpaper for both screens, painted at the inner screen's size. The cover
+ * shows the half it lies over when closed, so the picture lines up across the
+ * hand-off instead of jumping.
+ */
+export function sharedWallpaper(inner: HomeSpec, img: HTMLImageElement | null): HTMLCanvasElement {
+  const c = document.createElement('canvas')
+  c.width = inner.w
+  c.height = inner.h
+  paintWallpaper(c.getContext('2d')!, inner.w, inner.h, img)
+  return c
+}
+
+export function paintHome(spec: HomeSpec, shared: HTMLCanvasElement): HTMLCanvasElement {
   const c = document.createElement('canvas')
   c.width = spec.w
   c.height = spec.h
   const wall = document.createElement('canvas')
   wall.width = spec.w
   wall.height = spec.h
-  paintWallpaper(wall.getContext('2d')!, spec.w, spec.h, img)
+  const wctx = wall.getContext('2d')!
+  if (spec.kind === 'inner') {
+    wctx.drawImage(shared, 0, 0, spec.w, spec.h)
+  } else {
+    // The half next to the hinge, cover-fitted (the two are within 3% in aspect).
+    const sw = shared.width / 2
+    const sh = shared.height
+    const s = Math.max(spec.w / sw, spec.h / sh)
+    const cw = spec.w / s
+    const ch = spec.h / s
+    wctx.drawImage(shared, sw + (sw - cw) / 2, (sh - ch) / 2, cw, ch, 0, 0, spec.w, spec.h)
+  }
 
   const ctx = c.getContext('2d')!
   ctx.drawImage(wall, 0, 0)
