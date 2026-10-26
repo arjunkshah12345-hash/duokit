@@ -5,6 +5,7 @@ import {
   blurAt,
   hingeDistance,
   isMoving,
+  onScreen,
   sampleU,
   sampleV,
   shadeAt,
@@ -45,17 +46,28 @@ describe('unfold model', () => {
     expect(unfoldFrame(90, 'inner').motion).toBe(1)
   })
 
-  it('keeps the hinge sharp and blurs cubically toward the far edge', () => {
+  it('keeps the hinge sharp and blurs with the panel gap toward the far edge', () => {
     const f = unfoldFrame(60, 'cover')
     expect(blurAt(0, f)).toBe(0)
-    expect(blurAt(0.5, f)).toBeCloseTo(blurAt(1, f) / 8, 9)
+    expect(blurAt(0.5, f)).toBeCloseTo(blurAt(1, f) / 2, 9)
   })
 
-  it('leaves the resting half nearly sharp and only dims it', () => {
+  it('darkens the free edge to nearly black at full motion', () => {
     const f = unfoldFrame(90, 'inner')
-    expect(blurAt(1, f, false)).toBeCloseTo(blurAt(1, f) * UNFOLD.fixedBlur, 9)
-    expect(shadeAt(1, f, false)).toBeCloseTo(shadeAt(0.2, f, false), 9)
-    expect(shadeAt(1, f, false)).toBeGreaterThan(shadeAt(1, f, true))
+    expect(shadeAt(1, f)).toBeCloseTo(1 - UNFOLD.shadeGain, 9)
+    expect(shadeAt(0, f)).toBe(1)
+  })
+
+  it('leaves the resting half untouched', () => {
+    const f = unfoldFrame(90, 'inner')
+    expect(blurAt(1, f, false)).toBe(0)
+    expect(shadeAt(1, f, false)).toBe(f.opacity)
+  })
+
+  it('sends rays that miss the open screen to black', () => {
+    const f = unfoldFrame(45, 'cover')
+    expect(onScreen(sampleU(1, 'cover', f), sampleV(1, 0, 'cover', f))).toBe(false)
+    expect(onScreen(sampleU(0.5, 'cover', f), sampleV(0.5, 0.5, 'cover', f))).toBe(true)
   })
 
   it('ray-casts the moving panel onto the open screen plane', () => {

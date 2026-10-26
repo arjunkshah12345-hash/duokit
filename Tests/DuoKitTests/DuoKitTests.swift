@@ -55,6 +55,18 @@ final class UnfoldModelTests: XCTestCase {
         XCTAssertEqual(Unfold.frame(angle: 180, role: .cover).opacity, 0)
         XCTAssertEqual(Unfold.frame(angle: 0, role: .inner).opacity, 0)
     }
+
+    func testRestingHalfIsUntouched() {
+        let f = Unfold.frame(angle: 90, role: .inner)
+        XCTAssertEqual(Unfold.blur(at: 1, frame: f, moving: false), 0)
+        XCTAssertEqual(Unfold.shade(at: 1, frame: f, moving: false), f.opacity)
+    }
+
+    func testRaysThatMissTheScreenSeeBlack() {
+        let f = Unfold.frame(angle: 45, role: .cover)
+        XCTAssertFalse(Unfold.onScreen(Unfold.sampleU(1, role: .cover, frame: f), Unfold.sampleV(1, 0, role: .cover, frame: f)))
+        XCTAssertTrue(Unfold.onScreen(Unfold.sampleU(0.5, role: .cover, frame: f), Unfold.sampleV(0.5, 0.5, role: .cover, frame: f)))
+    }
 }
 
 final class DuoStateTests: XCTestCase {

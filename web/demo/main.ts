@@ -37,10 +37,15 @@ function loadContent() {
 
 function blit(dst: HTMLCanvasElement, src: HTMLCanvasElement, sx: number, sw: number) {
   const dpr = Math.min(devicePixelRatio || 1, 2)
-  dst.width = Math.round(dst.clientWidth * dpr)
-  dst.height = Math.round(dst.clientHeight * dpr)
+  const w = Math.round(dst.clientWidth * dpr)
+  const h = Math.round(dst.clientHeight * dpr)
+  // Resizing reallocates the canvas, so only do it when the layout changes.
+  if (dst.width !== w || dst.height !== h) {
+    dst.width = w
+    dst.height = h
+  }
   const ctx = dst.getContext('2d')!
-  ctx.drawImage(src, sx * src.width, 0, sw * src.width, src.height, 0, 0, dst.width, dst.height)
+  ctx.drawImage(src, sx * src.width, 0, sw * src.width, src.height, 0, 0, w, h)
 }
 
 function draw(a: number) {
@@ -108,9 +113,9 @@ setTimeout(() => play(false), 500)
 // Layout section: the same classify() + split logic as <DuoSplit>, on
 // simulated inputs for each posture.
 
-const SCENARIOS: { name: string; input: DuoInput; bend?: number; island?: boolean }[] = [
-  { name: 'iPhone 17 Pro', island: true, input: { viewport: { width: 402, height: 874 }, screen: { width: 402, height: 874 } } },
-  { name: 'Duo · cover', island: true, input: { viewport: { width: 466, height: 678 }, screen: { width: 466, height: 678 } } },
+const SCENARIOS: { name: string; input: DuoInput; bend?: number; camera?: Camera }[] = [
+  { name: 'iPhone 17 Pro', camera: 'island', input: { viewport: { width: 402, height: 874 }, screen: { width: 402, height: 874 } } },
+  { name: 'Duo · cover', camera: 'punch', input: { viewport: { width: 466, height: 678 }, screen: { width: 466, height: 678 } } },
   {
     name: 'Duo · inner, flat',
     input: { viewport: { width: 890, height: 626 }, screen: { width: 890, height: 626 }, devicePosture: 'continuous' },
@@ -141,6 +146,8 @@ const SCENARIOS: { name: string; input: DuoInput; bend?: number; island?: boolea
     },
   },
 ]
+
+type Camera = 'island' | 'punch'
 
 const K = 0.36
 
@@ -195,11 +202,14 @@ function detailPane(below: boolean, style = ''): string {
   </div>`
 }
 
-function renderApp(s: DuoState, island: boolean): string {
+function renderApp(s: DuoState, camera?: Camera): string {
   const { width, height } = s.viewport
-  const sb = island
-    ? `<div class="sb notch"><b>9:41</b><span></span>${STATUS_ICONS}</div>`
-    : `<div class="sb"><b>9:41</b><span class="sb-date">Sat Oct 24</span>${STATUS_ICONS}</div>`
+  const sb =
+    camera === 'island'
+      ? `<div class="sb notch"><b>9:41</b><span></span>${STATUS_ICONS}</div>`
+      : camera === 'punch'
+        ? `<div class="sb punch-sb"><b>9:41</b><span class="sb-date"></span>${STATUS_ICONS}</div>`
+        : `<div class="sb"><b>9:41</b><span class="sb-date">Sat Oct 24</span>${STATUS_ICONS}</div>`
   let body: string
   if (s.display !== 'inner' || !s.fold) {
     body = `<div class="ios-grid">${listPane(false)}</div>`
@@ -213,15 +223,15 @@ function renderApp(s: DuoState, island: boolean): string {
     const track = vertical ? 'grid-column' : 'grid-row'
     body = `<div class="ios-grid" style="${prop}:${at}px ${gap} minmax(0,1fr)">${listPane(true, `${track}:1${vertical ? '' : ';--tbh:50px'}`)}<div class="gap${s.foldIsOccluding ? ' hinge' : ''}" style="${track}:2"></div>${detailPane(!vertical, `${track}:3`)}</div>`
   }
-  return `<div class="ios${island ? ' has-island' : ''}" style="width:${width}px;height:${height}px;transform:scale(${K})">${sb}${body}<i class="hi"></i></div>`
+  return `<div class="ios${camera ? ' has-island' : ''}" style="width:${width}px;height:${height}px;transform:scale(${K})">${sb}${body}<i class="hi"></i></div>`
 }
 
-$('devices').innerHTML = SCENARIOS.map(({ name, input, bend, island }) => {
+$('devices').innerHTML = SCENARIOS.map(({ name, input, bend, camera }) => {
   const s = classify(input)
   const { width, height } = input.viewport
   const summary = `display: ${s.display}\nposture: ${s.posture}\nfold:    ${s.fold ? `${s.foldAxis} @ ${s.foldAxis === 'vertical' ? s.fold.x : s.fold.y}px` : 'none'}`
   return `<figure class="device">
-    <div class="hw frame${bend ? ' bent' : ''}" style="width:${width * K}px;height:${height * K}px;${bend ? `--bend:${bend}deg` : ''}">${renderApp(s, !!island)}${island ? '<i class="island"></i>' : ''}</div>
+    <div class="hw frame${bend ? ' bent' : ''}" style="width:${width * K}px;height:${height * K}px;${bend ? `--bend:${bend}deg` : ''}">${renderApp(s, camera)}${camera ? `<i class="${camera}"></i>` : ''}</div>
     <figcaption><b>${name}</b><div class="state">${summary}</div></figcaption>
   </figure>`
 }).join('')
