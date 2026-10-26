@@ -3,11 +3,16 @@
   "version": "0.1.0",
   "description": "Make web apps fold-aware on iPhone Duo (and other foldables), plus an open reconstruction of the Duo's unfold animation.",
   "license": "MIT",
+  "homepage": "https://arjunkshah12345-hash.github.io/duokit/",
+  "bugs": {
+    "url": "https://github.com/arjunkshah12345-hash/duokit/issues"
+  },
   "type": "module",
   "sideEffects": false,
   "files": [
     "dist",
-    "duo.css"
+    "duo.css",
+    "README.md"
   ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
