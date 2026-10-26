@@ -138,6 +138,15 @@ const ICON_SVG: Record<string, [bg: string, body: string, defs?: string]> = {
     '#000',
     '<g stroke="#2c2c2e" stroke-width="1"><line x1="12" y1="34" x2="88" y2="34"/><line x1="12" y1="52" x2="88" y2="52"/><line x1="12" y1="70" x2="88" y2="70"/></g><polyline points="14,66 28,58 40,63 55,40 67,48 86,28" fill="none" stroke="#30D158" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>',
   ],
+  TV: [
+    'url(#g)',
+    '<text x="50" y="64" text-anchor="middle" font-family="-apple-system, Helvetica, Arial, sans-serif" font-size="40" font-weight="600" letter-spacing="-1" fill="#fff">tv</text>',
+    grad('g', '#2c2c2e', '#000000'),
+  ],
+  News: [
+    '#fff',
+    '<path d="M27 76V24h11l24 33V24h11v52H62L38 43v33z" fill="#FA324A"/>',
+  ],
   Fitness: [
     '#000',
     `${[
@@ -176,7 +185,7 @@ function rr(ctx: Ctx, x: number, y: number, w: number, h: number, r: number) {
   ctx.roundRect(x, y, w, h, r)
 }
 
-function drawIcon(ctx: Ctx, name: string, x: number, y: number, size: number, label: boolean) {
+function drawIcon(ctx: Ctx, name: string, x: number, y: number, size: number) {
   const img = icons.get(name)
   ctx.save()
   rr(ctx, x, y, size, size, size * 0.225)
@@ -194,15 +203,6 @@ function drawIcon(ctx: Ctx, name: string, x: number, y: number, size: number, la
   ctx.strokeStyle = 'rgba(255,255,255,0.35)'
   rr(ctx, x + 0.6, y + 0.6, size - 1.2, size - 1.2, size * 0.225)
   ctx.stroke()
-  ctx.restore()
-  if (!label) return
-  ctx.save()
-  ctx.font = font(500, 12)
-  ctx.textAlign = 'center'
-  ctx.fillStyle = '#fff'
-  ctx.shadowColor = 'rgba(0,0,0,0.45)'
-  ctx.shadowBlur = 4
-  ctx.fillText(name, x + size / 2, y + size + 15)
   ctx.restore()
 }
 
@@ -225,41 +225,43 @@ function glass(ctx: Ctx, wall: HTMLCanvasElement, W: number, H: number, x: numbe
   ctx.restore()
 }
 
-function statusIcons(ctx: Ctx, right: number, cy: number, color = '#fff') {
+/** The iPhone Duo status ring: Wi-Fi inside a battery ring, signal as dots along the bottom. */
+function statusRing(ctx: Ctx, cx: number, cy: number, r: number) {
   ctx.save()
-  ctx.fillStyle = color
-  ctx.strokeStyle = color
-  // Battery
-  const bw = 25
-  const bx = right - bw - 2
-  ctx.globalAlpha = 0.4
-  ctx.lineWidth = 1
-  rr(ctx, bx + 0.5, cy - 6, bw - 1, 12, 4)
-  ctx.stroke()
-  rr(ctx, bx + bw, cy - 2, 1.6, 4, 1)
-  ctx.fill()
-  ctx.globalAlpha = 1
-  rr(ctx, bx + 2, cy - 4, (bw - 4) * 0.82, 8, 2.2)
-  ctx.fill()
-  // Wi-Fi
-  const wx = bx - 13
-  const wy = cy + 5.5
+  ctx.fillStyle = '#fff'
+  ctx.strokeStyle = '#fff'
+  ctx.shadowColor = 'rgba(0,0,0,0.18)'
+  ctx.shadowBlur = 3
+  ctx.lineWidth = r * 0.085
+  ctx.globalAlpha = 0.45
   ctx.beginPath()
-  ctx.moveTo(wx, wy)
-  ctx.arc(wx, wy, 3.6, -Math.PI * 0.75, -Math.PI * 0.25)
+  ctx.arc(cx, cy, r, Math.PI * 0.62, Math.PI * 2.38)
+  ctx.stroke()
+  ctx.globalAlpha = 1
+  // Battery: the ring's lit arc, ~80%.
+  ctx.beginPath()
+  ctx.arc(cx, cy, r, Math.PI * 0.62, Math.PI * (0.62 + 1.76 * 0.8))
+  ctx.stroke()
+  // Wi-Fi
+  const wy = cy + r * 0.12
+  ctx.beginPath()
+  ctx.moveTo(cx, wy)
+  ctx.arc(cx, wy, r * 0.17, -Math.PI * 0.75, -Math.PI * 0.25)
   ctx.closePath()
   ctx.fill()
-  ctx.lineWidth = 2.1
-  for (const r of [7.2, 11]) {
+  ctx.lineWidth = r * 0.1
+  ctx.lineCap = 'round'
+  for (const k of [0.34, 0.52]) {
     ctx.beginPath()
-    ctx.arc(wx, wy, r, -Math.PI * 0.75, -Math.PI * 0.25)
+    ctx.arc(cx, wy, r * k, -Math.PI * 0.75, -Math.PI * 0.25)
     ctx.stroke()
   }
-  // Signal
-  const sx = wx - 32
+  // Signal: four dots in the ring's gap.
   for (let i = 0; i < 4; i++) {
-    const h = 4 + i * 2.4
-    rr(ctx, sx + i * 4.6, cy + 5.5 - h, 3.2, h, 1)
+    const a = Math.PI * (0.5 + (i - 1.5) * 0.085)
+    ctx.globalAlpha = i < 3 ? 1 : 0.45
+    ctx.beginPath()
+    ctx.arc(cx + Math.cos(a) * r * 0.98, cy + Math.sin(a) * r * 0.98, r * 0.065, 0, Math.PI * 2)
     ctx.fill()
   }
   ctx.restore()
@@ -300,120 +302,252 @@ function cloud(ctx: Ctx, x: number, y: number, s: number) {
 // ---------------------------------------------------------------------------
 // Widgets
 
-function weatherWidget(ctx: Ctx, x: number, y: number, w: number, h: number) {
+function weatherWidget(ctx: Ctx, x: number, y: number, size: number) {
+  const k = size / 158
   ctx.save()
-  rr(ctx, x, y, w, h, 22)
-  const g = ctx.createLinearGradient(0, y, 0, y + h)
-  g.addColorStop(0, '#2C78D8')
-  g.addColorStop(1, '#5DAAEF')
+  rr(ctx, x, y, size, size, 22 * k)
+  const g = ctx.createLinearGradient(0, y, 0, y + size)
+  g.addColorStop(0, '#2A6DCB')
+  g.addColorStop(1, '#5E9DE6')
   ctx.fillStyle = g
   ctx.fill()
   ctx.clip()
   ctx.fillStyle = '#fff'
-  ctx.font = font(600, 15)
-  ctx.fillText('Cupertino', x + 16, y + 28)
-  ctx.font = font(300, 46)
-  ctx.fillText('72°', x + 13, y + 76)
-  const wide = w > 250
-  if (!wide) {
-    sun(ctx, x + 23, y + h - 50, 6)
-    ctx.font = font(600, 13)
-    ctx.fillText('Sunny', x + 16, y + h - 28)
-    ctx.fillText('H:78° L:59°', x + 16, y + h - 12)
-  } else {
-    ctx.textAlign = 'right'
-    sun(ctx, x + w - 24, y + 24, 7)
-    ctx.font = font(600, 13)
-    ctx.fillText('Sunny', x + w - 16, y + 56)
-    ctx.fillText('H:78° L:59°', x + w - 16, y + 73)
-    ctx.textAlign = 'center'
-    const hours = ['Now', '11AM', '12PM', '1PM', '2PM', '3PM']
-    const temps = [72, 74, 76, 78, 77, 75]
-    const col = (w - 24) / hours.length
-    hours.forEach((t, i) => {
-      const cx = x + 12 + col * (i + 0.5)
-      ctx.font = font(600, 12)
-      ctx.globalAlpha = 0.85
-      ctx.fillText(t, cx, y + h - 54)
-      ctx.globalAlpha = 1
-      if (i === 4) cloud(ctx, cx, y + h - 36, 9)
-      else sun(ctx, cx, y + h - 34, 5.5)
-      ctx.font = font(600, 14)
-      ctx.fillText(`${temps[i]}°`, cx, y + h - 11)
-    })
-  }
+  ctx.font = font(600, 15 * k)
+  ctx.fillText('Cupertino', x + 15 * k, y + 27 * k)
+  ctx.font = font(300, 44 * k)
+  ctx.fillText('72°', x + 12 * k, y + 72 * k)
+  sun(ctx, x + 22 * k, y + size - 52 * k, 4.6 * k)
+  cloud(ctx, x + 28 * k, y + size - 48 * k, 8 * k)
+  ctx.font = font(600, 12.5 * k)
+  ctx.fillText('Partly Cloudy', x + 15 * k, y + size - 27 * k)
+  ctx.fillText('H:78° L:59°', x + 15 * k, y + size - 11 * k)
   ctx.restore()
 }
 
-function calendarWidget(ctx: Ctx, x: number, y: number, w: number, h: number) {
+/** A Find My widget: a little map with a friend's location. */
+function findMyWidget(ctx: Ctx, x: number, y: number, size: number) {
+  const k = size / 158
   ctx.save()
-  rr(ctx, x, y, w, h, 22)
-  ctx.fillStyle = '#fff'
+  rr(ctx, x, y, size, size, 22 * k)
+  ctx.fillStyle = '#EEF0E6'
   ctx.fill()
   ctx.clip()
-  ctx.fillStyle = '#FF3B30'
-  ctx.font = font(600, 12)
-  ctx.fillText('SATURDAY', x + 16, y + 26)
+  // Parks and water
+  ctx.fillStyle = '#CDE8B8'
+  ctx.beginPath()
+  ctx.moveTo(x, y + size * 0.18)
+  ctx.lineTo(x + size * 0.42, y + size * 0.05)
+  ctx.lineTo(x + size * 0.56, y + size * 0.42)
+  ctx.lineTo(x + size * 0.1, y + size * 0.6)
+  ctx.closePath()
+  ctx.fill()
+  ctx.fillStyle = '#B3DBF4'
+  ctx.beginPath()
+  ctx.moveTo(x + size, y + size * 0.5)
+  ctx.quadraticCurveTo(x + size * 0.8, y + size * 0.62, x + size * 0.86, y + size)
+  ctx.lineTo(x + size, y + size)
+  ctx.fill()
+  // Streets
+  const road = ([x0, y0, x1, y1]: number[], w: number, c: string) => {
+    ctx.strokeStyle = c
+    ctx.lineWidth = w * k
+    ctx.lineCap = 'round'
+    ctx.beginPath()
+    ctx.moveTo(x + x0! * size, y + y0! * size)
+    ctx.lineTo(x + x1! * size, y + y1! * size)
+    ctx.stroke()
+  }
+  for (const [pts, w] of [
+    [[-0.1, 0.32, 1.1, 0.12], 7],
+    [[0.2, -0.1, 0.42, 1.1], 7],
+    [[-0.1, 0.78, 1.1, 0.55], 5],
+    [[0.72, -0.1, 0.95, 1.1], 5],
+    [[-0.1, 0.05, 0.6, 1.1], 3.5],
+  ] as [number[], number][]) {
+    road(pts, w + 1.5, '#D9DBD2')
+    road(pts, w, '#fff')
+  }
+  road([0.2, -0.1, 0.42, 1.1], 3, '#FFD466')
+  // Friend
+  const ax = x + size * 0.68
+  const ay = y + size * 0.3
+  const ar = 20 * k
+  ctx.fillStyle = 'rgba(0,0,0,0.18)'
+  ctx.beginPath()
+  ctx.arc(ax, ay + 1.5 * k, ar + 2.5 * k, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = '#fff'
+  ctx.beginPath()
+  ctx.arc(ax, ay, ar + 2.5 * k, 0, Math.PI * 2)
+  ctx.fill()
+  const ag = ctx.createLinearGradient(0, ay - ar, 0, ay + ar)
+  ag.addColorStop(0, '#FFB86B')
+  ag.addColorStop(1, '#FF7A59')
+  ctx.fillStyle = ag
+  ctx.beginPath()
+  ctx.arc(ax, ay, ar, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = '#fff'
+  ctx.font = font(600, 15 * k)
+  ctx.textAlign = 'center'
+  ctx.fillText('MC', ax, ay + 5.5 * k)
+  ctx.textAlign = 'left'
+  // Caption over a soft white fade
+  const fade = ctx.createLinearGradient(0, y + size * 0.52, 0, y + size)
+  fade.addColorStop(0, 'rgba(255,255,255,0)')
+  fade.addColorStop(0.45, 'rgba(255,255,255,0.92)')
+  fade.addColorStop(1, 'rgba(255,255,255,0.97)')
+  ctx.fillStyle = fade
+  ctx.fillRect(x, y + size * 0.52, size, size * 0.48)
+  ctx.fillStyle = '#8a8a8e'
+  ctx.font = font(500, 11 * k)
+  ctx.fillText('Now', x + 14 * k, y + size - 44 * k)
   ctx.fillStyle = '#1c1c1e'
-  ctx.font = font(400, 38)
-  ctx.fillText('24', x + 14, y + 64)
-  const events: [string, string, string][] = [
-    ['Design review', '10:00–11:00 AM', '#AF52DE'],
-    ['Lunch with Maya', '12:30–1:30 PM', '#34C759'],
-  ]
-  events.forEach(([title, time, color], i) => {
-    const ey = y + 80 + i * 38
-    if (ey + 32 > y + h) return
-    ctx.fillStyle = color
-    rr(ctx, x + 16, ey, 3.5, 31, 2)
-    ctx.fill()
-    ctx.fillStyle = '#1c1c1e'
-    ctx.font = font(600, 13)
-    ctx.fillText(title, x + 25, ey + 13)
-    ctx.fillStyle = '#8e8e93'
-    ctx.font = font(400, 12)
-    ctx.fillText(time, x + 25, ey + 28)
-  })
+  ctx.font = font(600, 14 * k)
+  ctx.fillText('Infinite Loop', x + 14 * k, y + size - 27 * k)
+  ctx.font = font(400, 12 * k)
+  ctx.fillText('Cupertino, CA', x + 14 * k, y + size - 11 * k)
   ctx.restore()
 }
 
-function photosWidget(ctx: Ctx, x: number, y: number, w: number, h: number) {
+/** A Photos "On This Day" memory: a close-up of a pink cosmos against the sky. */
+function memoryWidget(ctx: Ctx, x: number, y: number, w: number, h: number) {
   ctx.save()
-  rr(ctx, x, y, w, h, 22)
+  rr(ctx, x, y, w, h, 26)
   ctx.clip()
   const sky = ctx.createLinearGradient(0, y, 0, y + h)
-  sky.addColorStop(0, '#FFB46E')
-  sky.addColorStop(0.5, '#FF6F7D')
-  sky.addColorStop(0.62, '#5A4C9C')
-  sky.addColorStop(1, '#22305E')
+  sky.addColorStop(0, '#3E63C9')
+  sky.addColorStop(0.55, '#6E8FE0')
+  sky.addColorStop(1, '#9DB5EE')
   ctx.fillStyle = sky
   ctx.fillRect(x, y, w, h)
-  ctx.fillStyle = 'rgba(255,236,170,0.95)'
+  // Out-of-focus meadow, other flowers and bokeh: shallow depth of field.
+  ctx.save()
+  ctx.filter = 'blur(7px)'
+  for (const [bx, by, br] of [
+    [0.16, 0.66, 0.16],
+    [0.88, 0.58, 0.12],
+    [0.3, 0.86, 0.2],
+  ]) {
+    ctx.fillStyle = 'rgba(236,92,160,0.85)'
+    ctx.beginPath()
+    ctx.arc(x + bx! * w, y + by! * h, br! * w, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  const meadow = ctx.createLinearGradient(0, y + h * 0.62, 0, y + h)
+  meadow.addColorStop(0, 'rgba(126,170,92,0)')
+  meadow.addColorStop(0.35, 'rgba(110,158,82,0.85)')
+  meadow.addColorStop(1, '#3F6B35')
+  ctx.fillStyle = meadow
+  ctx.fillRect(x, y + h * 0.62, w, h * 0.38)
+  const bokeh: [number, number, number, string][] = [
+    [0.12, 0.2, 0.09, 'rgba(255,255,255,0.18)'],
+    [0.86, 0.12, 0.06, 'rgba(255,255,255,0.14)'],
+    [0.2, 0.72, 0.12, 'rgba(255,170,210,0.35)'],
+    [0.9, 0.78, 0.1, 'rgba(255,200,120,0.3)'],
+  ]
+  for (const [bx, by, br, c] of bokeh) {
+    ctx.fillStyle = c
+    ctx.beginPath()
+    ctx.arc(x + bx * w, y + by * h, br * w, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+  // Stem
+  ctx.strokeStyle = '#4E8A3C'
+  ctx.lineWidth = 5
   ctx.beginPath()
-  ctx.arc(x + w * 0.62, y + h * 0.55, w * 0.13, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.fillStyle = '#2B2346'
+  ctx.moveTo(x + w * 0.46, y + h)
+  ctx.quadraticCurveTo(x + w * 0.5, y + h * 0.7, x + w * 0.55, y + h * 0.44)
+  ctx.stroke()
+  // Flower
+  const fx = x + w * 0.55
+  const fy = y + h * 0.4
+  const pr = w * 0.3
+  ctx.save()
+  ctx.shadowColor = 'rgba(20,30,80,0.35)'
+  ctx.shadowBlur = 14
+  ctx.shadowOffsetY = 6
+  for (let i = 0; i < 8; i++) {
+    const a = (i * Math.PI) / 4 + 0.2
+    ctx.save()
+    ctx.translate(fx, fy)
+    ctx.rotate(a)
+    const pg = ctx.createLinearGradient(0, 0, pr, 0)
+    pg.addColorStop(0, '#A3124C')
+    pg.addColorStop(0.3, '#E8408C')
+    pg.addColorStop(0.8, '#FF9CC8')
+    pg.addColorStop(1, '#FFD3E6')
+    ctx.fillStyle = pg
+    // A cosmos petal: broad, with a notched tip.
+    ctx.beginPath()
+    ctx.moveTo(0, 0)
+    ctx.bezierCurveTo(pr * 0.3, -pr * 0.26, pr * 0.85, -pr * 0.3, pr, -pr * 0.12)
+    ctx.lineTo(pr * 0.9, 0)
+    ctx.lineTo(pr, pr * 0.12)
+    ctx.bezierCurveTo(pr * 0.85, pr * 0.3, pr * 0.3, pr * 0.26, 0, 0)
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(150,20,80,0.25)'
+    ctx.lineWidth = 0.8
+    for (const k of [-0.08, 0, 0.08]) {
+      ctx.beginPath()
+      ctx.moveTo(pr * 0.15, 0)
+      ctx.lineTo(pr * 0.85, pr * k)
+      ctx.stroke()
+    }
+    ctx.restore()
+  }
+  ctx.restore()
+  const core = ctx.createRadialGradient(fx - 3, fy - 3, 1, fx, fy, pr * 0.2)
+  core.addColorStop(0, '#FFE680')
+  core.addColorStop(0.6, '#F2B321')
+  core.addColorStop(1, '#B3740F')
+  ctx.fillStyle = core
   ctx.beginPath()
-  ctx.moveTo(x, y + h * 0.6)
-  ctx.quadraticCurveTo(x + w * 0.25, y + h * 0.42, x + w * 0.5, y + h * 0.6)
-  ctx.lineTo(x, y + h)
+  ctx.arc(fx, fy, pr * 0.19, 0, Math.PI * 2)
   ctx.fill()
-  ctx.fillStyle = 'rgba(20,24,52,0.9)'
-  ctx.fillRect(x, y + h * 0.62, w, h)
-  ctx.fillStyle = 'rgba(255,214,150,0.5)'
-  for (let i = 0; i < 6; i++) ctx.fillRect(x + w * (0.52 + Math.sin(i) * 0.04), y + h * (0.66 + i * 0.045), w * (0.2 - i * 0.025), 1.6)
+  // Legibility scrim, caption, play button
+  const scrim = ctx.createLinearGradient(0, y + h * 0.7, 0, y + h)
+  scrim.addColorStop(0, 'rgba(0,0,0,0)')
+  scrim.addColorStop(1, 'rgba(0,0,0,0.38)')
+  ctx.fillStyle = scrim
+  ctx.fillRect(x, y + h * 0.7, w, h * 0.3)
   ctx.fillStyle = '#fff'
-  ctx.shadowColor = 'rgba(0,0,0,0.4)'
-  ctx.shadowBlur = 4
-  ctx.font = font(600, 13)
-  ctx.fillText('On This Day', x + 14, y + h - 28)
-  ctx.font = font(400, 12)
-  ctx.fillText('Oct 24, 2023', x + 14, y + h - 12)
+  ctx.font = font(700, 19)
+  ctx.fillText('On This Day', x + 16, y + h - 36)
+  ctx.font = font(600, 10.5)
+  ctx.fillText('OCTOBER 24, 2025', x + 16, y + h - 18)
+  ctx.fillStyle = 'rgba(0,0,0,0.32)'
+  ctx.beginPath()
+  ctx.arc(x + w - 32, y + h - 33, 16, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = '#fff'
+  ctx.beginPath()
+  ctx.moveTo(x + w - 37, y + h - 41)
+  ctx.lineTo(x + w - 24, y + h - 33)
+  ctx.lineTo(x + w - 37, y + h - 25)
+  ctx.closePath()
+  ctx.fill()
   ctx.restore()
 }
 
 // ---------------------------------------------------------------------------
-// Wallpaper
+// Wallpaper: desert dunes under a pale sky, painted procedurally.
+
+function ridge(ctx: Ctx, w: number, base: number, amp: number, seed: number) {
+  ctx.beginPath()
+  ctx.moveTo(0, base)
+  for (let i = 0; i <= 120; i++) {
+    const t = i / 120
+    const n =
+      Math.sin(t * 7.1 + seed) * 0.5 +
+      Math.sin(t * 13.3 + seed * 2.1) * 0.28 +
+      Math.sin(t * 29.7 + seed * 3.7) * 0.14 +
+      Math.abs(Math.sin(t * 4.3 + seed * 0.7)) * 0.6
+    ctx.lineTo(t * w, base - n * amp)
+  }
+}
 
 export function paintWallpaper(ctx: Ctx, w: number, h: number, img: HTMLImageElement | null) {
   if (img) {
@@ -423,26 +557,86 @@ export function paintWallpaper(ctx: Ctx, w: number, h: number, img: HTMLImageEle
     ctx.drawImage(img, (w - iw) / 2, (h - ih) / 2, iw, ih)
     return
   }
-  const g = ctx.createLinearGradient(0, 0, w * 0.6, h)
-  g.addColorStop(0, '#0E2A6B')
-  g.addColorStop(0.55, '#3B2A86')
-  g.addColorStop(1, '#8C2F6E')
-  ctx.fillStyle = g
+  const horizon = h * 0.5
+  const sky = ctx.createLinearGradient(0, 0, 0, horizon)
+  sky.addColorStop(0, '#6F95C4')
+  sky.addColorStop(0.6, '#AFC4DA')
+  sky.addColorStop(1, '#E6E1D6')
+  ctx.fillStyle = sky
   ctx.fillRect(0, 0, w, h)
-  const m = Math.max(w, h)
-  const blobs: [number, number, number, string][] = [
-    [0.2, 0.25, 0.6, 'rgba(64,140,255,0.75)'],
-    [0.85, 0.2, 0.45, 'rgba(255,150,90,0.6)'],
-    [0.7, 0.75, 0.55, 'rgba(255,80,150,0.55)'],
-    [0.15, 0.95, 0.45, 'rgba(120,90,255,0.6)'],
+
+  // Two mountain ranges, the far one lost in haze.
+  ridge(ctx, w, horizon + h * 0.01, h * 0.075, 1.3)
+  ctx.lineTo(w, h)
+  ctx.lineTo(0, h)
+  ctx.fillStyle = 'rgba(132,145,165,0.7)'
+  ctx.fill()
+  ridge(ctx, w, horizon + h * 0.07, h * 0.085, 4.2)
+  ctx.lineTo(w, h)
+  ctx.lineTo(0, h)
+  const range = ctx.createLinearGradient(0, horizon - h * 0.05, 0, horizon + h * 0.12)
+  range.addColorStop(0, '#6E6560')
+  range.addColorStop(1, '#AE9F8C')
+  ctx.fillStyle = range
+  ctx.fill()
+
+  // Dunes, back to front: a sunlit face above each crest line, shadow below it.
+  const dunes: [number, number, number][] = [
+    [0.62, 0.05, 0.4],
+    [0.73, 0.08, 1.7],
+    [0.86, 0.1, 3.1],
   ]
-  for (const [x, y, r, c] of blobs) {
-    const rg = ctx.createRadialGradient(x * w, y * h, 0, x * w, y * h, r * m)
-    rg.addColorStop(0, c)
-    rg.addColorStop(1, 'rgba(0,0,0,0)')
-    ctx.fillStyle = rg
-    ctx.fillRect(0, 0, w, h)
+  for (const [base, amp, seed] of dunes) {
+    const y0 = h * base
+    const crest = (t: number) =>
+      y0 - (Math.sin(t * Math.PI * 1.6 + seed) * 0.6 + Math.sin(t * Math.PI * 3.3 + seed * 1.7) * 0.4) * h * amp
+    ctx.beginPath()
+    ctx.moveTo(0, crest(0))
+    for (let i = 1; i <= 100; i++) ctx.lineTo((i / 100) * w, crest(i / 100))
+    ctx.lineTo(w, h)
+    ctx.lineTo(0, h)
+    ctx.closePath()
+    const g = ctx.createLinearGradient(0, y0 - h * amp, 0, y0 + h * 0.16)
+    g.addColorStop(0, '#F3E6CF')
+    g.addColorStop(0.35, '#DEC6A0')
+    g.addColorStop(1, '#BE9E73')
+    ctx.fillStyle = g
+    ctx.fill()
+    // Crest highlight
+    ctx.save()
+    ctx.filter = `blur(${Math.max(1, h / 300)}px)`
+    ctx.strokeStyle = 'rgba(255,250,240,0.55)'
+    ctx.lineWidth = h / 260
+    ctx.beginPath()
+    ctx.moveTo(0, crest(0))
+    for (let i = 1; i <= 100; i++) ctx.lineTo((i / 100) * w, crest(i / 100))
+    ctx.stroke()
+    ctx.restore()
   }
+
+  // Wind ripples in the sand.
+  ctx.save()
+  ctx.lineWidth = Math.max(1, h / 700)
+  for (let i = 0; i < 80; i++) {
+    const y = h * (0.62 + (i / 80) * 0.4)
+    ctx.strokeStyle = i % 2 ? 'rgba(255,255,255,0.1)' : 'rgba(110,80,40,0.08)'
+    ctx.beginPath()
+    for (let j = 0; j <= 60; j++) {
+      const t = j / 60
+      const yy = y + Math.sin(t * 9 + i * 0.7) * h * 0.006 + Math.sin(t * 2.3 + i) * h * 0.012
+      if (j) ctx.lineTo(t * w, yy)
+      else ctx.moveTo(0, yy)
+    }
+    ctx.stroke()
+  }
+  ctx.restore()
+
+  // A soft vignette keeps white type legible at the top.
+  const top = ctx.createLinearGradient(0, 0, 0, h * 0.3)
+  top.addColorStop(0, 'rgba(40,60,90,0.18)')
+  top.addColorStop(1, 'rgba(40,60,90,0)')
+  ctx.fillStyle = top
+  ctx.fillRect(0, 0, w, h * 0.3)
 }
 
 // ---------------------------------------------------------------------------
@@ -454,6 +648,12 @@ export interface HomeSpec {
   w: number
   h: number
 }
+
+/**
+ * Where the cover's camera sits, as fractions of the cover screen. The demo
+ * draws the punch-hole there, and the home screen keeps it clear.
+ */
+export const COVER_CAMERA = { x: 0.857, y: 0.05, d: 0.07 } as const
 
 /**
  * One wallpaper for both screens, painted at the inner screen's size. The cover
@@ -493,113 +693,89 @@ export function paintHome(spec: HomeSpec, shared: HTMLCanvasElement): HTMLCanvas
   ctx.scale(PX_PER_PT, PX_PER_PT)
   const W = spec.w / PX_PER_PT
   const H = spec.h / PX_PER_PT
-  if (spec.kind === 'cover') paintCover(ctx, wall, W, H)
-  else paintInner(ctx, wall, W, H)
+  const glassAt = (x: number, y: number, w: number, h: number, r: number) => glass(ctx, wall, W, H, x, y, w, h, r)
+  if (spec.kind === 'cover') {
+    paintPage(ctx, glassAt, 0, W, H, true)
+  } else {
+    // iPhone Duo's inner home screen: the cover's page on the half it covers
+    // when closed, so nothing moves under your thumb, and a large widget on
+    // the half that unfolds.
+    const half = W / 2
+    paintPage(ctx, glassAt, half, half, H, false)
+    const top = H * 0.12
+    memoryWidget(ctx, half * 0.153, top, half * 0.7, H * 0.872 - top)
+  }
   return c
 }
 
-function paintCover(ctx: Ctx, wall: HTMLCanvasElement, W: number, H: number) {
-  // Status bar either side of the Dynamic Island (29% wide, centred ~37pt down).
-  const cy = H * 0.026 + (W * 0.29) / 3.4 / 2
-  ctx.fillStyle = '#fff'
-  ctx.font = font(600, 17)
-  ctx.textAlign = 'center'
-  ctx.fillText('9:41', W * 0.18, cy + 6)
-  ctx.textAlign = 'left'
-  statusIcons(ctx, W - W * 0.09, cy)
+type GlassAt = (x: number, y: number, w: number, h: number, r: number) => void
 
-  const m = 26
-  const icon = 62
-  const px = (W - 2 * m) / 4
-  const py = 94
-  const top = 76
-  const ix = (col: number) => m + col * px + (px - icon) / 2
-  const iy = (row: number) => top + row * py
+/**
+ * One home screen page, laid out as fractions of its size (measured from
+ * Apple's iPhone Duo films): two widgets over a 4×4 grid, and a right-hand
+ * column with the time, the status ring, a vertical dock and Search.
+ */
+function paintPage(ctx: Ctx, glassAt: GlassAt, ox: number, w: number, h: number, cover: boolean) {
+  const icon = w * 0.146
+  const cx = (col: number) => ox + w * (0.117 + 0.176 * col)
+  const cy = (row: number) => h * (0.43 + 0.13 * row)
+  const widget = w * 0.322
+  const top = h * 0.12
+  weatherWidget(ctx, cx(0) - icon / 2, top, widget)
+  findMyWidget(ctx, cx(2) - icon / 2, top, widget)
+  const apps = [
+    ['FaceTime', 'Calendar', 'Photos', 'Camera'],
+    ['Mail', 'Notes', 'Clock', 'Maps'],
+    ['TV', 'News', 'App Store', 'Podcasts'],
+    ['Health', 'Wallet', 'Books', 'Settings'],
+  ]
+  apps.forEach((row, r) => row.forEach((name, i) => drawIcon(ctx, name, cx(i) - icon / 2, cy(r) - icon / 2, icon)))
 
-  weatherWidget(ctx, ix(0), iy(0), px + icon, py + icon)
-  calendarWidget(ctx, ix(2), iy(0), px + icon, py + icon)
-  const apps = ['FaceTime', 'Calendar', 'Photos', 'Camera', 'Mail', 'Clock', 'Maps', 'Weather', 'Notes', 'Reminders', 'App Store', 'Settings']
-  apps.forEach((name, i) => drawIcon(ctx, name, ix(i % 4), iy(2 + Math.floor(i / 4)), icon, true))
-
-  const dockH = 88
-  const dockY = H - dockH - 9
-  // Search pill
-  const pw = 78
-  const pillY = dockY - 34
-  glass(ctx, wall, W, H, (W - pw) / 2, pillY, pw, 25, 12.5)
-  ctx.save()
-  ctx.fillStyle = '#fff'
-  ctx.strokeStyle = '#fff'
-  ctx.lineWidth = 1.6
-  ctx.beginPath()
-  ctx.arc((W - pw) / 2 + 15, pillY + 11.5, 4, 0, Math.PI * 2)
-  ctx.moveTo((W - pw) / 2 + 18, pillY + 14.5)
-  ctx.lineTo((W - pw) / 2 + 21, pillY + 17.5)
-  ctx.stroke()
-  ctx.font = font(600, 13)
-  ctx.fillText('Search', (W - pw) / 2 + 26, pillY + 17)
-  ctx.restore()
-
-  glass(ctx, wall, W, H, 9, dockY, W - 18, dockH, 34)
-  ;['Phone', 'Safari', 'Messages', 'Music'].forEach((name, i) => drawIcon(ctx, name, ix(i), dockY + (dockH - icon) / 2, icon, false))
-}
-
-function paintInner(ctx: Ctx, wall: HTMLCanvasElement, W: number, H: number) {
-  // iPad-style status bar: time and date on the left. The camera is under the display.
-  ctx.fillStyle = '#fff'
-  ctx.font = font(600, 15)
-  ctx.fillText('9:41', 26, 22)
-  ctx.font = font(500, 15)
-  ctx.fillText('Sat Oct 24', 26 + ctx.measureText('9:41 ').width + 2, 22)
-  statusIcons(ctx, W - 22, 17)
-
-  const m = 40
-  const icon = 64
-  const px = (W - 2 * m) / 8
-  const py = 114
-  const top = 50
-  const ix = (col: number) => m + col * px + (px - icon) / 2
-  const iy = (row: number) => top + row * py
-
-  // Widgets on the left half, apps on the right half.
-  weatherWidget(ctx, ix(0), iy(0), 3 * px + icon, py + icon)
-  calendarWidget(ctx, ix(0), iy(2), px + icon, py + icon)
-  photosWidget(ctx, ix(2), iy(2), px + icon, py + icon)
-  const apps = ['FaceTime', 'Calendar', 'Photos', 'Camera', 'Mail', 'Notes', 'Reminders', 'Clock', 'Maps', 'Weather', 'Books', 'App Store', 'Podcasts', 'Health', 'Wallet', 'Settings']
-  apps.forEach((name, i) => drawIcon(ctx, name, ix(4 + (i % 4)), iy(Math.floor(i / 4)), icon, true))
-
-  // Page dots
+  // Page dots under the grid.
   ctx.fillStyle = '#fff'
   ;[0, 1].forEach((i) => {
     ctx.globalAlpha = i ? 0.45 : 1
     ctx.beginPath()
-    ctx.arc(W / 2 - 6 + i * 12, H - 118, 3.5, 0, Math.PI * 2)
+    ctx.arc(ox + w * 0.37 + i * 11, h * 0.93, 3.2, 0, Math.PI * 2)
     ctx.fill()
   })
   ctx.globalAlpha = 1
 
-  // Dock: eight apps, a divider, two recents.
-  const dock = ['Phone', 'Safari', 'Messages', 'Music', 'Files', 'Find My', 'Photos', 'Mail']
-  const recents = ['Fitness', 'Stocks']
-  const di = 58
-  const gap = 15
-  const pad = 14
-  const n = dock.length + recents.length
-  const dw = pad * 2 + n * di + (n - 1) * gap + gap + 1
-  const dh = di + pad * 2
-  const dx = (W - dw) / 2
-  const dy = H - dh - 12
-  glass(ctx, wall, W, H, dx, dy, dw, dh, 28)
-  let x = dx + pad
-  dock.forEach((name) => {
-    drawIcon(ctx, name, x, dy + pad, di, false)
-    x += di + gap
-  })
-  ctx.fillStyle = 'rgba(255,255,255,0.35)'
-  ctx.fillRect(x - gap / 2 + 2, dy + pad + 6, 1, di - 12)
-  x += gap
-  recents.forEach((name) => {
-    drawIcon(ctx, name, x, dy + pad, di, false)
-    x += di + gap
-  })
+  // Right-hand column. On the cover, the camera sits at its top.
+  const rx = ox + w * COVER_CAMERA.x
+  const timeY = cover ? h * 0.118 : h * 0.06
+  ctx.save()
+  ctx.fillStyle = '#fff'
+  ctx.font = font(600, 15)
+  ctx.textAlign = 'center'
+  ctx.shadowColor = 'rgba(0,0,0,0.15)'
+  ctx.shadowBlur = 3
+  ctx.fillText('9:41', rx, timeY)
+  ctx.restore()
+  statusRing(ctx, rx, timeY + h * (cover ? 0.052 : 0.056), w * 0.043)
+
+  const di = w * 0.108
+  const dockW = w * 0.159
+  const gap = di * 0.24
+  const dockH = 4 * di + 5 * gap
+  const dockY = h * 0.51 - dockH / 2
+  glassAt(rx - dockW / 2, dockY, dockW, dockH, dockW / 2)
+  ;['Phone', 'Safari', 'Messages', 'Music'].forEach((name, i) =>
+    drawIcon(ctx, name, rx - di / 2, dockY + gap + i * (di + gap), di),
+  )
+
+  // Search
+  const sr = w * 0.05
+  const sy = h * 0.927
+  glassAt(rx - sr, sy - sr, sr * 2, sr * 2, sr)
+  ctx.save()
+  ctx.strokeStyle = '#fff'
+  ctx.lineWidth = 2
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.arc(rx - 1.5, sy - 1.5, sr * 0.3, 0, Math.PI * 2)
+  ctx.moveTo(rx + sr * 0.14, sy + sr * 0.14)
+  ctx.lineTo(rx + sr * 0.36, sy + sr * 0.36)
+  ctx.stroke()
+  ctx.restore()
 }

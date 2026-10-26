@@ -16,8 +16,9 @@
  *
  * Per pixel, content on the moving panel is ray-cast onto the plane of the open
  * screen (so it holds still), and blur and shade grow with distance from the
- * hinge (`g`): sharp at the fold, softest and darkest at the moving edge. The
- * half resting in your hand stays nearly sharp and only dims.
+ * hinge (`g`): sharp at the fold, softest and darkest at the moving edge. Rays
+ * that miss the open screen (a sample outside 0..1) see black, which darkens
+ * the free edge's corners. The half resting in your hand is left untouched.
  *
  * See docs/ANIMATION.md for how each constant was derived. The Swift port in
  * Sources/DuoKit/UnfoldModel.swift must stay numerically identical: both test
@@ -44,25 +45,28 @@ export const UNFOLD = {
    * perspective view rather than just an orthographic one.
    */
   viewDistance: 3.75,
-  /** Blur grows with the cube of hinge distance: at half way it is 1/8 of the edge value. */
-  blurFalloff: 3,
-  /** The half resting in your hand gets this fraction of the moving panel's blur. */
-  fixedBlur: 0.4,
-  /** Moving panel: brightness lost at the free edge at full motion. */
-  shadeGain: 0.75,
-  shadeFalloff: 2,
-  /** Resting half: uniform dimming at full motion, lifting as the phone opens. */
-  fixedDim: 0.25,
+  /**
+   * Blur grows linearly with hinge distance, like the panel's gap from the
+   * image plane: in Apple's launch film the swinging half is already soft a
+   * thumb's width from the fold, and about half as soft midway as at the edge.
+   */
+  blurFalloff: 1,
+  /** Brightness lost at the free edge at full motion: it reads as nearly black. */
+  shadeGain: 0.9,
+  shadeFalloff: 1.5,
   /** Never compress content past this, so it can't collapse to a line. */
   minStretch: 0.2,
-  /** 72px at the far edge of a 2670px-wide inner screen. */
-  innerMaxBlur: 72 / 2670,
-  /** The same 72px measured on the 1398px-wide cover screen. */
-  coverMaxBlur: 72 / 1398,
+  /**
+   * 144px at the far edge of the 2670px-wide inner screen: in Apple's film the
+   * photo on the swinging half is unrecognisable until the last ~40°.
+   */
+  innerMaxBlur: 144 / 2670,
+  /** The same 144px measured on the 1398px-wide cover screen. */
+  coverMaxBlur: 144 / 1398,
   /** Cover screen fades to black between these angles. */
   coverFadeOut: [120, 175] as const,
-  /** Inner screen wakes between these angles. */
-  innerFadeIn: [5, 60] as const,
+  /** Inner screen wakes between these angles: already lit as soon as it's visible. */
+  innerFadeIn: [2, 20] as const,
 } as const
 
 const DEG = Math.PI / 180
@@ -145,21 +149,24 @@ export function sampleV(u: number, v: number, role: ScreenRole, frame: UnfoldFra
   return 0.5 + (v - 0.5) * perspectiveAt(hingeDistance(u, role, opts), frame)
 }
 
-/** Blur radius at distance g, as a fraction of screen width. Sharp at the hinge, cubic toward the edge. */
+/** Blur radius at distance g, as a fraction of screen width. Sharp at the hinge, growing toward the edge. */
 export function blurAt(g: number, frame: UnfoldFrame, moving = true): number {
-  const r = frame.maxBlur * frame.motion * Math.pow(clamp(g), UNFOLD.blurFalloff)
-  return moving ? r : r * UNFOLD.fixedBlur
+  if (!moving) return 0
+  return frame.maxBlur * frame.motion * Math.pow(clamp(g), UNFOLD.blurFalloff)
 }
 
 /**
  * Brightness multiplier at distance g (1 = untouched). The moving panel darkens
- * toward its free edge; the resting half dims evenly and brightens as it opens.
+ * toward its free edge; the resting half only follows the screen's opacity.
  */
 export function shadeAt(g: number, frame: UnfoldFrame, moving = true): number {
-  const loss = moving
-    ? UNFOLD.shadeGain * frame.motion * Math.pow(clamp(g), UNFOLD.shadeFalloff)
-    : UNFOLD.fixedDim * frame.motion
+  const loss = moving ? UNFOLD.shadeGain * frame.motion * Math.pow(clamp(g), UNFOLD.shadeFalloff) : 0
   return (1 - loss) * frame.opacity
+}
+
+/** True when a sample lands on the open screen; rays that miss it see black. */
+export function onScreen(su: number, sv: number): boolean {
+  return su >= 0 && su <= 1 && sv >= 0 && sv <= 1
 }
 
 /**

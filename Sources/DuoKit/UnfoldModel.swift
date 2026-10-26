@@ -33,16 +33,16 @@ public enum Unfold {
     public static let transitAngle = 90.0
     /// Assumed eye distance in panel widths (≈30 cm from an 8 cm panel).
     public static let viewDistance = 3.75
-    public static let blurFalloff = 3.0
-    public static let fixedBlur = 0.4
-    public static let shadeGain = 0.75
-    public static let shadeFalloff = 2.0
-    public static let fixedDim = 0.25
+    /// Blur grows linearly with hinge distance, like the panel's gap from the image plane.
+    public static let blurFalloff = 1.0
+    /// Brightness lost at the free edge at full motion.
+    public static let shadeGain = 0.9
+    public static let shadeFalloff = 1.5
     public static let minStretch = 0.2
-    public static let innerMaxBlur = 72.0 / 2670.0
-    public static let coverMaxBlur = 72.0 / 1398.0
+    public static let innerMaxBlur = 144.0 / 2670.0
+    public static let coverMaxBlur = 144.0 / 1398.0
     public static let coverFadeOut = (120.0, 175.0)
-    public static let innerFadeIn = (5.0, 60.0)
+    public static let innerFadeIn = (2.0, 20.0)
 
     @inline(__always)
     static func clamp(_ x: Double, _ lo: Double = 0, _ hi: Double = 1) -> Double {
@@ -105,14 +105,21 @@ public enum Unfold {
         return 0.5 + (v - 0.5) * perspective(at: hingeDistance(u, role: role, hinge: hinge), frame: f)
     }
 
+    /// Blur radius at distance `g`, as a fraction of the screen width. The resting half stays sharp.
     public static func blur(at g: Double, frame f: UnfoldFrame, moving: Bool = true) -> Double {
-        let r = f.maxBlur * f.motion * pow(clamp(g), blurFalloff)
-        return moving ? r : r * fixedBlur
+        guard moving else { return 0 }
+        return f.maxBlur * f.motion * pow(clamp(g), blurFalloff)
     }
 
+    /// Brightness multiplier at distance `g`. The resting half only follows the screen's opacity.
     public static func shade(at g: Double, frame f: UnfoldFrame, moving: Bool = true) -> Double {
-        let loss = moving ? shadeGain * f.motion * pow(clamp(g), shadeFalloff) : fixedDim * f.motion
+        let loss = moving ? shadeGain * f.motion * pow(clamp(g), shadeFalloff) : 0
         return (1 - loss) * f.opacity
+    }
+
+    /// True when a sample lands on the open screen; rays that miss it see black.
+    public static func onScreen(_ su: Double, _ sv: Double) -> Bool {
+        (0...1).contains(su) && (0...1).contains(sv)
     }
 
     /// Hinge angle over normalised time for a time-driven unfold (cosine ease).

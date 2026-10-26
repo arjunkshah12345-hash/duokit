@@ -50,10 +50,8 @@ out vec4 outColor;
 
 const float VIEW = ${UNFOLD.viewDistance.toFixed(4)};
 const float BLUR_FALLOFF = ${UNFOLD.blurFalloff.toFixed(4)};
-const float FIXED_BLUR = ${UNFOLD.fixedBlur.toFixed(4)};
 const float SHADE_GAIN = ${UNFOLD.shadeGain.toFixed(4)};
 const float SHADE_FALLOFF = ${UNFOLD.shadeFalloff.toFixed(4)};
-const float FIXED_DIM = ${UNFOLD.fixedDim.toFixed(4)};
 
 vec2 fitScale() {
   float ca = u_res.x / u_res.y;
@@ -75,30 +73,42 @@ void main() {
   float reach = g * stretch * k;
   float sx = !moving ? x : (u_role < 0.5 ? reach : 0.5 - reach * 0.5);
   if (u_flip > 0.5) sx = 1.0 - sx;
-  float sy = 0.5 + (v_uv.y - 0.5) * k;
+  vec2 p = vec2(sx, 0.5 + (v_uv.y - 0.5) * k);
 
   vec2 s = fitScale();
-  vec2 uv = (vec2(sx, sy) - 0.5) * s + 0.5;
-
-  // Progressive blur: sharp at the hinge, cubic toward the edge.
-  float rpx = maxBlur * motion * pow(g, BLUR_FALLOFF) * (moving ? 1.0 : FIXED_BLUR) * u_res.x;
-  vec2 step = 0.5 * rpx / u_res * s;
   float texelsPerPx = u_texSize.x * s.x / u_res.x;
+  // Rays that miss the open screen see black. The kernel blurs coverage with
+  // colour, so the black spreads softly into the free edge's corners.
+  vec2 px = 1.0 / u_res;
+  float rpx = moving ? maxBlur * motion * pow(g, BLUR_FALLOFF) * u_res.x : 0.0;
+  vec2 stride = 0.5 * rpx * px;
+  vec2 edge = max(stride, px);
   float lod = max(0.0, log2(max(rpx * texelsPerPx * 0.5, 1.0)));
 
-  vec3 acc = vec3(0.0);
-  float w[5] = float[](1.0, 4.0, 6.0, 4.0, 1.0);
-  for (int j = 0; j < 5; j++) {
-    for (int i = 0; i < 5; i++) {
-      vec2 o = vec2(float(i - 2), float(j - 2)) * step;
-      acc += textureLod(u_tex, uv + o, lod).rgb * (w[i] * w[j]);
+  vec3 color;
+  if (rpx < 0.5) {
+    // Sharp: one tap (the resting half, and the moving panel at rest).
+    vec2 c = step(vec2(0.0), p) * step(p, vec2(1.0));
+    color = textureLod(u_tex, (p - 0.5) * s + 0.5, 0.0).rgb * (moving ? c.x * c.y : 1.0);
+  } else {
+    vec3 acc = vec3(0.0);
+    float w[5] = float[](1.0, 4.0, 6.0, 4.0, 1.0);
+    for (int j = 0; j < 5; j++) {
+      for (int i = 0; i < 5; i++) {
+        vec2 q = p + vec2(float(i - 2), float(j - 2)) * stride;
+        vec2 c = smoothstep(-edge, vec2(0.0), q) * (1.0 - smoothstep(vec2(1.0), 1.0 + edge, q));
+        acc += textureLod(u_tex, (q - 0.5) * s + 0.5, lod).rgb * (w[i] * w[j] * c.x * c.y);
+      }
     }
+    color = acc / 256.0;
   }
-  vec3 color = acc / 256.0;
 
-  if (u_fit > 0.5 && (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)) color = vec3(0.0);
+  if (u_fit > 0.5) {
+    vec2 uv = (p - 0.5) * s + 0.5;
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) color = vec3(0.0);
+  }
 
-  float loss = moving ? SHADE_GAIN * motion * pow(g, SHADE_FALLOFF) : FIXED_DIM * motion;
+  float loss = moving ? SHADE_GAIN * motion * pow(g, SHADE_FALLOFF) : 0.0;
   outColor = vec4(color * (1.0 - loss) * opacity, 1.0);
 }`
 
@@ -221,7 +231,7 @@ export function unfoldStyle(
     stops.push(`rgba(0,0,0,${shadeAt(g, f, isMoving(x, role)).toFixed(3)}) ${u * 100}%`)
   }
   // Mean of the progressive radius over g: ∫ g^n dg = 1 / (n + 1).
-  const blur = blurAt(1, f) * width / (UNFOLD.blurFalloff + 1)
+  const blur = (blurAt(1, f) * width) / (UNFOLD.blurFalloff + 1)
   // The CSS version can only stretch the cover screen as a whole.
   const scale = role === 'cover' ? 1 / f.stretch : 1
   const mask = `linear-gradient(to right, ${stops.join(', ')})`

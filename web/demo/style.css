@@ -143,6 +143,14 @@ input[type='range'] { width: 100%; accent-color: var(--ink); }
   border-radius: 50%; background: radial-gradient(circle at 35% 35%, #2b3550, #0b0d14 60%);
 }
 
+/* The cover's punch-hole camera, top corner away from the hinge (COVER_CAMERA in ios.ts). */
+.punch {
+  position: absolute; left: 85.7%; top: 5%; width: 7%; aspect-ratio: 1; z-index: 1;
+  transform: translate(-50%, -50%); border-radius: 50%;
+  background: radial-gradient(circle at 40% 38%, #29324a 0 12%, #0b0d14 34%, #000 62%);
+  box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+}
+
 .hinge { position: absolute; left: -6px; width: 12px; top: 1px; bottom: 1px; border-radius: 6px; background: var(--ti-hinge); }
 .btn { position: absolute; background: var(--ti-btn); border-radius: 2px; }
 .btn.vol, .btn.cam { right: -2.5px; width: 4px; }
@@ -166,7 +174,6 @@ figcaption { margin-top: 22px; font-size: 13px; color: var(--mute); font-family:
     0 0 0 calc(var(--bz, 7px) + 3px) rgba(0, 0, 0, 0.35),
     0 26px 36px -14px rgba(0, 0, 0, 0.35);
 }
-.hw.cover-hw .island { top: 2.4%; }
 .screen-flat { border-radius: 20px; }
 .screen-flat.cover { width: 233px; height: 339px; }
 .screen-flat.inner { width: 481px; height: 339px; }
@@ -178,6 +185,7 @@ figcaption { margin-top: 22px; font-size: 13px; color: var(--mute); font-family:
 .device .frame { --bz: 5px; border-radius: 18px; background: #fff; }
 .device .frame.bent { transform: perspective(900px) rotateY(var(--bend, 0deg)); }
 .device .frame .island { top: 4px; width: 30%; z-index: 4; }
+.device .frame .punch { top: 22px; z-index: 4; }
 
 /* Mail, at real iOS point sizes; renderApp() scales it into each frame. */
 .ios {
@@ -196,9 +204,19 @@ figcaption { margin-top: 22px; font-size: 13px; color: var(--mute); font-family:
 .sb.notch { display: grid; grid-template-columns: 35% 1fr 35%; padding: 0; font-size: 17px; }
 .sb.notch b { justify-self: center; }
 .sb.notch .sb-icons { justify-self: center; }
+/* Cover: time on the left, status icons stop short of the punch-hole camera. */
+.sb.punch-sb { font-size: 17px; padding: 0 22% 0 34px; }
 .ios-grid { position: absolute; inset: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
 .gap { background: #c6c6c8; }
-.gap.hinge { background: #f2f2f7; }
+.gap/* The cover's punch-hole camera, top corner away from the hinge (COVER_CAMERA in ios.ts). */
+.punch {
+  position: absolute; left: 85.7%; top: 5%; width: 7%; aspect-ratio: 1; z-index: 1;
+  transform: translate(-50%, -50%); border-radius: 50%;
+  background: radial-gradient(circle at 40% 38%, #29324a 0 12%, #0b0d14 34%, #000 62%);
+  box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+}
+
+.hinge { background: #f2f2f7; }
 .pane { position: relative; overflow: hidden; min-width: 0; min-height: 0; background: #fff; padding-top: var(--sbh); }
 .pane.below { padding-top: 14px; }
 .nav { display: flex; justify-content: space-between; padding: 8px 16px 0; color: #007aff; }
