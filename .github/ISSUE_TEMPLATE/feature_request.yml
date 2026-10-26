@@ -1,0 +1,16 @@
+name: Feature request
+description: Suggest a layout, posture or API DuoKit should handle
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to build?
+      description: The app, the screen and the posture where DuoKit falls short today.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help?
+      description: An API sketch is welcome. Say whether it needs both ports.

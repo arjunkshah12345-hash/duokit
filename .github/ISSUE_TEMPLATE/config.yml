@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Live demo
+    url: https://arjunkshah12345-hash.github.io/duokit/
+    about: Try every posture and the unfold in the browser.
+  - name: How the unfold works
+    url: https://github.com/arjunkshah12345-hash/duokit/blob/main/docs/ANIMATION.md
+    about: Read this before reporting that the unfold looks off.
